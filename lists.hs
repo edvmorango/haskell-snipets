@@ -1,5 +1,5 @@
 module Lists where
-
+import Data.Char
 -- Honestly, I really did not understand this exercise
 
 -- eftBool :: Bool -> Bool -> [Bool]
@@ -73,3 +73,17 @@ zipInWith a b = (a,b)
 
 zipInTermsOfZipWith :: [a] -> [b] -> [(a,b)]
 zipInTermsOfZipWith a b = zipWith' zipInWith a b
+
+filterUpperCase :: String -> String
+filterUpperCase = filter (\x -> isUpper x)
+
+capitalize :: String -> String
+capitalize (a:t) =  toUpper a : t
+
+capitalizeAll :: String -> String
+capitalizeAll [] = []
+capitalizeAll (a:t) =  toUpper a : capitalizeAll t
+
+listHead :: String -> Char
+listHead [] = error "empty list"
+listHead a = (toUpper . head) a
