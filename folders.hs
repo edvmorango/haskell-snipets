@@ -43,3 +43,10 @@ sumDb = (sum . filterDbNumber)
 avgDb :: [DatabaseItem] -> Double
 avgDb db =  (fromIntegral $ sum numbers) / (fromIntegral $ length numbers)
   where numbers = filterDbNumber db
+
+fibs = 1 : scanl (+) 1 fibs
+fibsN x = fibs !! x
+
+fibs20 = take 20 fibs
+
+fibsLessThan100 = takeWhile (<100) fibs
