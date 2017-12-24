@@ -165,3 +165,9 @@ testTreeMain = do
   testPreorder
   testInorder
   testPostorder
+
+foldTree :: (a -> b -> b) -> b -> Tree a -> b
+foldTree _ acc Leaf = acc
+foldTree f acc (Node left a right) = foldTree f leftF right
+    where cur = f a acc
+          leftF = foldTree f cur left
