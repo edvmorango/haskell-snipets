@@ -3,7 +3,8 @@
 module Adts where
 
 import Data.Int
-
+import Data.List (elem)
+import Data.Char
 
 data Price = Price Integer deriving (Eq, Show)
 
@@ -171,3 +172,28 @@ foldTree _ acc Leaf = acc
 foldTree f acc (Node left a right) = foldTree f leftF right
     where cur = f a acc
           leftF = foldTree f cur left
+
+-- As pattern
+
+isSubseqOf :: (Eq a) => [a] -> [a] -> Bool
+isSubseqOf [] _ = True
+isSubseqOf _ [] = False
+isSubseqOf w@(wh:wt) (ph:pt)
+  | wh == ph = isSubseqOf wt pt
+  | otherwise = isSubseqOf w pt
+
+
+capitalizeWords :: String -> [(String, String)]
+capitalizeWords [] = []
+capitalizeWords s =  cap (takeWhile (/=' ') s) : capitalizeWords (drop  1 $ dropWhile(/=' ') s)
+  where cap = (\ a@(h:t) -> (a, (toUpper h):t) )
+
+-----
+
+capitalizeWord :: String -> String
+capitalizeWord (h:t) = toUpper h : t
+
+capitalizeParagraph :: String -> String
+capitalizeParagraph [] = []
+capitalizeParagraph (' ':t) =  ' ' : capitalizeParagraph t
+capitalizeParagraph (h:t) = (toUpper h) : (takeWhile ( /= '.') t) ++ '.' : capitalizeParagraph (drop  1 $ dropWhile(/='.') t)
