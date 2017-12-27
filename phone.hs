@@ -98,8 +98,3 @@ groupListString (h:t) acc =
 
 coolestWord :: [String] -> String
 coolestWord =  (fst . (maximumBy (\(_,a) (_,b) -> compare a b) . (flip groupListString [])))
-
-
-teste :: a -> a
-teste "oi" = "oi"
-teste 'o' = 'o'
