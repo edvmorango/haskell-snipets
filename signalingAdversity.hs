@@ -123,3 +123,15 @@ either' _ f (Right e) = f e
 eitherMaybe'' :: (b -> c) -> Either a b -> Maybe c
 eitherMaybe'' _ (Left _) = Nothing
 eitherMaybe'' f (Right b) = Just (f b)
+
+myIterate :: (a -> a) -> a -> [a]
+myIterate f a = a : myIterate f (f a)
+
+myUnfoldr :: (b -> Maybe (a, b)) -> b -> [a]
+myUnfoldr f b = case r of
+                Just (c,n) -> c : myUnfoldr f n
+                Nothing -> []
+  where r = f b
+
+myBetterIterate :: (a -> a) -> a -> [a]
+myBetterIterate f a = myUnfoldr (\x -> Just (x, f x))  a
