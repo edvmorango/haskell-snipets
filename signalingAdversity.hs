@@ -88,8 +88,38 @@ catMaybess  = foldr l []
                             Nothing -> acc)
 
 flipMaybe :: [Maybe a] -> Maybe [a]
-flipMaybe ms =
-if nothing
-    then Nothing
-    else Just (ms)
+flipMaybe ms = if nothing then Nothing else Just ( catMaybess  ms)
   where nothing = (or . map (isNothing)) ms
+
+isLeft :: Either a b -> [a]
+isLeft (Left a) = [a]
+isLeft _ = []
+
+isRight :: Either a b -> [b]
+isRight (Right b) = [b]
+isRight _ = []
+
+
+lefts' :: [Either a b] -> [a]
+lefts' =  foldr (\a acc -> (isLeft a) ++ acc ) []
+
+rights' :: [Either a b] -> [b]
+rights' = foldr (\a acc -> (isRight a) ++ acc ) []
+
+partitionEithers' :: [Either a b] -> ([a], [b])
+partitionEithers'  = foldr (\e (l,r) -> case e of
+                                        Left a ->  (a:l,r)
+                                        Right a -> (l,a:r)) ([],[])
+
+eitherMaybe' :: (b -> c) -> Either a b -> Maybe c
+eitherMaybe' _ (Left _) = Nothing
+eitherMaybe' f (Right a) = Just (f a)
+
+either' :: (a -> c) -> (b -> c) -> Either a b -> c
+either' f _ (Left e) = f e
+either' _ f (Right e) = f e
+
+
+eitherMaybe'' :: (b -> c) -> Either a b -> Maybe c
+eitherMaybe'' _ (Left _) = Nothing
+eitherMaybe'' f (Right b) = Just (f b)
