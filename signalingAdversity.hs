@@ -54,4 +54,42 @@ integerToNat a
               where parse 0 = Zero
                     parse p = Succ $ parse (p-1)
 
---
+
+
+isJust' :: Maybe a -> Bool
+isJust' Nothing = False
+isJust' _ = True
+
+isNothing' :: Maybe a -> Bool
+isNothing' = not . isJust'
+
+mayybee :: b -> (a -> b) -> Maybe a -> b
+mayybee b _ Nothing = b
+mayybee _ f (Just a) = f a
+
+fromMaybee :: a -> Maybe a -> a
+fromMaybee a Nothing = a
+fromMaybee _ (Just a) = a
+
+
+listToMaybee :: [a] -> Maybe a
+listToMaybee [] = Nothing
+listToMaybee (h:_) = Just h
+
+
+maybeToListt :: Maybe a -> [a]
+maybeToListt Nothing = []
+maybeToListt (Just a) = [a]
+
+catMaybess :: [Maybe a] -> [a]
+catMaybess  = foldr l []
+  where l = (\a acc -> case a of
+                            Just v -> v : acc
+                            Nothing -> acc)
+
+flipMaybe :: [Maybe a] -> Maybe [a]
+flipMaybe ms =
+if nothing
+    then Nothing
+    else Just (ms)
+  where nothing = (or . map (isNothing)) ms
