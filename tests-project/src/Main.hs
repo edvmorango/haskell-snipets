@@ -92,3 +92,9 @@ main = hspec $ do
   describe "RecursiveProduct" $ do
     it "recursiveProduct  of 5 and 3 should be 15" $ do
       (recursiveProduct 5 3) `shouldBe` 15
+
+detachedGreater :: Int -> Bool
+detachedGreater x = x + 1 > x
+
+runDetached :: IO ()
+runDetached = quickCheck detachedGreater
