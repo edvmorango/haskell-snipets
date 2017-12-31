@@ -53,9 +53,13 @@ handleGuess puzzle guess = do
                       return $ fillInCharacter puzzle guess
 
 
+
+wrongGuesses :: String -> [Char] -> Int
+wrongGuesses w gs = length $ filter (\a ->  not $ elem a w)  gs
+
 gameOver :: Puzzle -> IO ()
 gameOver (Puzzle wordToGuess _ guessed) =
-  if (length guessed) > 7
+  if (wrongGuesses wordToGuess guessed) >= (length wordToGuess)
     then do putStrLn "You lose!"
             putStrLn $ "The word was: " ++ wordToGuess
             exitSuccess
