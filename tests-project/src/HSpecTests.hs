@@ -16,6 +16,11 @@ dividedBy num denom = go num denom 0
 addition :: Int -> Int -> Int
 addition a b = a + b
 
+recursiveProduct :: (Eq a, Num a) => a -> a -> a
+recursiveProduct a b
+  | b == 1 = a
+  | otherwise = a + (recursiveProduct a (b-1))
+
 main :: IO ()
 main = hspec $ do
   describe "Addition" $ do
@@ -28,3 +33,6 @@ main = hspec $ do
       (dividedBy 3 3) `shouldBe` (1,0)
     it "5 divided by 2 should be (2,1)" $ do
       (dividedBy 5 2) `shouldBe` (2,1)
+  describe "RecursiveProduct" $ do
+    it "recursiveProduct  of 5 and 3 should be 15" $ do
+      (recursiveProduct 5 3) `shouldBe` 15
