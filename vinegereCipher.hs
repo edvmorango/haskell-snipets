@@ -21,3 +21,11 @@ encode sh msg = map (\(c,s) -> case s of
                                      then chr $ 65 + ((c - 65 + s) `mod` alphSize)
                                      else chr $ c + s ) toShift
   where toShift =  calcShift sh msg
+
+dynamicEncode :: IO ()
+dynamicEncode = do
+    putStr "Put the Shift word: "
+    shift <- getLine
+    putStr "Put a word to encode: "
+    word <- getLine
+    putStrLn $ encode (makeShift shift)   word
