@@ -1,9 +1,24 @@
+{-# LANGUAGE DeriveGeneric #-}
 module Main where
 
 import qualified Data.Map as M
 import Morse
 import Test.QuickCheck
+import GHC.Generics
 
+
+data Bool' = True' | False' deriving (Generic)
+
+instance CoArbitrary Bool'
+
+trueGen :: Gen Int
+trueGen = coarbitrary True' arbitrary
+
+falseGen :: Gen Int
+falseGen = coarbitrary False' arbitrary
+
+
+------------
 data Trivial = Trivial deriving (Eq, Show)
 
 data Identity a = Identity a deriving (Eq, Show)
