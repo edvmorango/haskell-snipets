@@ -1,4 +1,7 @@
 module Main where
 
+
+import RecursionTests
+
 main :: IO ()
-main =  do putStrLn "tests will happen here"
+main =  recursionTests
