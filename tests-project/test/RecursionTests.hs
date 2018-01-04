@@ -1,7 +1,6 @@
 module RecursionTests where
 
 import Test.Hspec
-import Test.QuickCheck
 import Recursion
 
 

@@ -2,6 +2,9 @@ module Main where
 
 
 import RecursionTests
+import ExercisesTests
 
 main :: IO ()
-main =  recursionTests
+main = do
+   recursionTests
+   exercisesTests
