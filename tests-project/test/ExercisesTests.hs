@@ -1,9 +1,11 @@
+{-# LANGUAGE DeriveGeneric #-}
 module ExercisesTests (exercisesTests) where
 
 import Test.Hspec
 import Test.QuickCheck
 import Exercises
 import Data.List
+import GHC.Generics
 
 genFractional :: (Arbitrary a , Fractional a) => Gen a -- Must extends Arbitrary when wants force a Instance
 genFractional = do
@@ -37,19 +39,29 @@ genList a = do
    l <- listOf a
    return l
 
+genListTuple :: (Eq a) => Gen a -> Gen ([a],[a])
+genListTuple a = do
+    l <- listOf a
+    t <- listOf a
+    return (l,t)
 
 genNumber :: (Arbitrary a, Eq a, Num a) => Gen a
 genNumber = do
   a <- arbitrary
   return a
 
-genPotentiationTuple :: (Arbitrary a
-                       , Ord a
-                       , Integral a) => Gen (a,a)
-genPotentiationTuple = do
-  a <- arbitrary `suchThat` (> 1)
-  b <- arbitrary `suchThat` (> 1)
-  return (a, b)
+
+genNaturalNumber :: Gen Int
+genNaturalNumber = do
+  a <- arbitrary `suchThat` (>= 0)
+  return a
+
+
+genListSized :: (Arbitrary a) => Gen a -> Gen (Int, [a])
+genListSized g = do
+  s <- genNaturalNumber
+  a <- vectorOf s g
+  return (s,a)
 
 genPotentiationTuple3 :: (Arbitrary a, Ord a, Integral a) => Gen (a,a,a)
 genPotentiationTuple3 = do
@@ -90,10 +102,19 @@ exercisesTests = hspec $ do
   describe "^ associative" $ do
     it "is not associative " $ do
       True-- forAll (genPotentiationTuple3 :: Gen (Integer, Integer, Integer)) (\(a,b,c) -> a ^ (b ^ c) /=  (a ^ b) ^ c  )
-  describe "reverse identty" $ do 
+  describe "reverse identty" $ do
     it "(reverse . reverse) x = x" $ do
       forAll (genList (genNumber :: Gen Int)) (\x -> reverse (reverse x) == x )
-
-
-
-----
+  describe "$ property" $ do
+    it " f $ a  == f a  " $ do
+      forAll (genNumber :: Gen Int) (\x -> ((+) x $ x * x ) == ((+) x (x * x)) )
+    it " (f . g) x  == f (g x)  " $ do
+      forAll (genNumber :: Gen Int) (\x -> (((+) x) . ((*) 2)) x == (+) x ((*) 2 x) )
+  describe "folder properties" $ do
+    it "foldr (:) x y == y ++ x)" $ do
+      forAll (genListTuple (genNumber :: Gen Int)) (\(x,y) ->  (foldr (:) x y) == ( y ++ x) )
+    it "foldr (++) [] == concat" $ do
+      forAll (genListTuple (genNumber :: Gen Int)) (\(x,y) ->  (foldr (++) [] [x,y]) ==  concat [x, y] )
+  describe "take with lenght" $ do
+    it "f n xs = length (take n xs) == n" $ do
+      forAll (genListSized (genNumber :: Gen Int)) (\(s,v) -> length (take s v) == s)
