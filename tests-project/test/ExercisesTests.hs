@@ -45,8 +45,8 @@ genListTuple a = do
     t <- listOf a
     return (l,t)
 
-genNumber :: (Arbitrary a, Eq a, Num a) => Gen a
-genNumber = do
+genT :: (Arbitrary a, Eq a, Ord a) => Gen a
+genT = do
   a <- arbitrary
   return a
 
@@ -88,16 +88,16 @@ exercisesTests = hspec $ do
       forAll (genSortedList (genOrd :: Gen Int)) (\x -> listOrdered x)
   describe "plusAssociative" $ do
     it "plusAssociative a b c = true" $ do
-      forAll (genNumber :: Gen Int) (\x y z -> plusAssociative x y z)
+      forAll (genT :: Gen Int) (\x y z -> plusAssociative x y z)
   describe "plusCommutative" $ do
     it "plusCommutative a b c = true" $ do
-      forAll (genNumber :: Gen Int) (\x y -> plusCommutative x y)
+      forAll (genT :: Gen Int) (\x y -> plusCommutative x y)
   describe "productAssociative" $ do
     it "productAssociative a b c = true" $ do
-      forAll (genNumber :: Gen Int) (\x y z -> productAssociative x y z)
+      forAll (genT :: Gen Int) (\x y z -> productAssociative x y z)
   describe "productCommutative" $ do
     it "productCommutative a b c = true" $ do
-      forAll (genNumber :: Gen Int) (\x y -> productCommutative x y)
+      forAll (genT :: Gen Int) (\x y -> productCommutative x y)
   describe "quot & div  properties" $ do
     it "quot" $ do
       forAll (genIntegralDividableTuple :: Gen (Integer, Integer)) (\(x,y)-> (quot x y)*y + (rem x y) == x)
@@ -108,21 +108,25 @@ exercisesTests = hspec $ do
       True-- forAll (genPotentiationTuple3 :: Gen (Integer, Integer, Integer)) (\(a,b,c) -> a ^ (b ^ c) /=  (a ^ b) ^ c  )
   describe "reverse identty" $ do
     it "(reverse . reverse) x = x" $ do
-      forAll (genList (genNumber :: Gen Int)) (\x -> reverse (reverse x) == x )
+      forAll (genList (genT :: Gen Int)) (\x -> reverse (reverse x) == x )
   describe "$ property" $ do
     it " f $ a  == f a  " $ do
-      forAll (genNumber :: Gen Int) (\x -> ((+) x $ x * x ) == ((+) x (x * x)) )
+      forAll (genT :: Gen Int) (\x -> ((+) x $ x * x ) == ((+) x (x * x)) )
     it " (f . g) x  == f (g x)  " $ do
-      forAll (genNumber :: Gen Int) (\x -> (((+) x) . ((*) 2)) x == (+) x ((*) 2 x) )
+      forAll (genT :: Gen Int) (\x -> (((+) x) . ((*) 2)) x == (+) x ((*) 2 x) )
   describe "folder properties" $ do
     it "foldr (:) x y == y ++ x)" $ do
-      forAll (genListTuple (genNumber :: Gen Int)) (\(x,y) ->  (foldr (:) x y) == ( y ++ x) )
+      forAll (genListTuple (genT :: Gen Int)) (\(x,y) ->  (foldr (:) x y) == ( y ++ x) )
     it "foldr (++) [] == concat" $ do
-      forAll (genListTuple (genNumber :: Gen Int)) (\(x,y) ->  (foldr (++) [] [x,y]) ==  concat [x, y] )
+      forAll (genListTuple (genT :: Gen Int)) (\(x,y) ->  (foldr (++) [] [x,y]) ==  concat [x, y] )
   describe "take with lenght" $ do
     it "f n xs = length (take n xs) == n" $ do
-      forAll (genListSized (genNumber :: Gen Int)) (\(s,v) -> length (take s v) == s)
+      forAll (genListSized (genT :: Gen Int)) (\(s,v) -> length (take s v) == s)
   describe "show read show" $ do
     it "f x = (read (show x)) == x" $ do
       forAll (readShowGen :: Gen Int ) (\(x) -> (read . show) x == x )
-      
+  describe "idempotence" $ do
+    it "capitalize word is idempontet (only ther first application means something) " $ do
+      forAll ( genList (genT :: Gen Char) )  (\x -> (capitalize x) == (twice capitalize) x)
+    it "sort list" $ do
+      forAll ( genList (genT :: Gen Int) )  (\x -> (sort x) == (fourTimes sort) x)

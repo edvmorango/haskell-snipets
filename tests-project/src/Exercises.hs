@@ -1,6 +1,7 @@
 module Exercises where
 
 import Data.List
+import Data.Char
 
 half :: (Fractional a) => a -> a
 half x = x / 2
@@ -27,3 +28,11 @@ productAssociative x y z = x * (y * z) == (x * y) * z
 
 productCommutative :: (Eq a, Num a) => a -> a -> Bool
 productCommutative x y = x * y == y * x
+
+capitalize :: String -> String
+capitalize [] = []
+capitalize (a:t) =  toUpper a : t
+
+twice f = f . f
+
+fourTimes = (twice . twice)
