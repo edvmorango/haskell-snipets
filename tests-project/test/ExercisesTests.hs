@@ -70,6 +70,10 @@ genPotentiationTuple3 = do
   c <- arbitrary  `suchThat` (> 1) `suchThat` (< 10) `suchThat` (/= a) `suchThat` (/= b)
   return (a,b,c)
 
+readShowGen :: (Arbitrary a, Read a, Show a) => Gen a
+readShowGen = do
+  a <- arbitrary
+  return a
 
 exercisesTests :: IO ()
 exercisesTests = hspec $ do
@@ -118,3 +122,7 @@ exercisesTests = hspec $ do
   describe "take with lenght" $ do
     it "f n xs = length (take n xs) == n" $ do
       forAll (genListSized (genNumber :: Gen Int)) (\(s,v) -> length (take s v) == s)
+  describe "show read show" $ do
+    it "f x = (read (show x)) == x" $ do
+      forAll (readShowGen :: Gen Int ) (\(x) -> (read . show) x == x )
+      
