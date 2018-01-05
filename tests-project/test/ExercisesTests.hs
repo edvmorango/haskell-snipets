@@ -7,6 +7,13 @@ import Exercises
 import Data.List
 import GHC.Generics
 
+
+genFool :: Gen Fool
+genFool = elements [Fulse, Frue]
+
+genFoolBiased :: Gen Fool
+genFoolBiased = frequency [(2, return Fulse), (1, return Frue)]
+
 genFractional :: (Arbitrary a , Fractional a) => Gen a -- Must extends Arbitrary when wants force a Instance
 genFractional = do
   a <- arbitrary

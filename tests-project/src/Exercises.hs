@@ -3,6 +3,8 @@ module Exercises where
 import Data.List
 import Data.Char
 
+data Fool =  Fulse | Frue deriving (Eq, Show)
+
 half :: (Fractional a) => a -> a
 half x = x / 2
 
