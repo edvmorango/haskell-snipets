@@ -1,4 +1,4 @@
-module VinegereChiper where
+module VinegereCipher where
 
 import Data.Char
 
