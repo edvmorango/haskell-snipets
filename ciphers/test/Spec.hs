@@ -2,16 +2,16 @@ module Spec where
 
 import Test.QuickCheck
 import Test.Hspec
-import Cipher
-import VinegereCipher
+import qualified Cipher as C
+import qualified VinegereCipher as V
 
-genT :: (Arbitrary a, Eq a, Ord a) :: Gen a
+genT :: (Arbitrary a, Eq a, Ord a) => Gen a
 genT = do
   a <- arbitrary
   return a
 
 genChar :: Gen Char
-genChar = elements $ concat [['a'..'z', ],['A'..'Z'],[' ']]
+genChar = elements $ concat [['a'..'z'],['A'..'Z'],[' ']]
 
 genWord :: Gen String
 genWord = listOf genChar
