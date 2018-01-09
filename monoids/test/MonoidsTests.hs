@@ -1,4 +1,4 @@
-module Spec where
+module MonoidsTests where
 
 import Test.Hspec
 import Test.QuickCheck
@@ -31,9 +31,8 @@ genThrepleOptional = do
 
 type OptionalProduct = Optional (Product Int)
 
-
-main :: IO ()
-main = hspec $ do
+monoidsTests :: IO ()
+monoidsTests = hspec $ do
   describe "monoids" $ do
     it "associativity " $ do
       forAll (genThreple ::  Gen (Sum Int, Sum Int, Sum Int))
