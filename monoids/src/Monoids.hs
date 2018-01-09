@@ -33,6 +33,16 @@ instance Monoid a => Monoid (Option a) where
   mempty = Nada
 
 
+
+newtype Optional a = Optional {getSome :: Option a} deriving (Eq, Show)
+
+instance Monoid (Optional a) where
+    mempty = (Optional { getSome = Nada} )
+
+    mappend (Optional (Algo a)) _ = Optional (Algo a)
+    mappend _ (Optional (Algo a)) = Optional (Algo a)
+    mappend _ _ = Optional Nada
+
 ---------------
 
 type Verb = String
