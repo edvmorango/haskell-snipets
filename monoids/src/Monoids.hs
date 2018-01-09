@@ -22,3 +22,12 @@ instance Monoid (Booly a) where
   mappend Fal _ = Fal
   mappend _ Fal = Fal
   mappend Tru Tru = Tru
+
+data Option a = Nada | Algo a deriving (Eq, Show)
+
+instance Monoid a => Monoid (Option a) where
+  mappend Nada (Algo a) = Algo a
+  mappend (Algo a) Nada = Algo a
+  mappend (Algo a) (Algo b) = Algo $ a <> b
+
+  mempty = Nada
