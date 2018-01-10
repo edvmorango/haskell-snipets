@@ -51,7 +51,32 @@ instance (Monoid a, S.Semigroup a) => Monoid (Identity a) where
 
 type IdentityAssoc a = (Identity a) -> (Identity a) -> (Identity a) -> Bool
 
+
 -----------------------------------------
+data Two a b = Two a b deriving (Eq, Show)
+
+instance (Arbitrary a
+        , Arbitrary b
+        , S.Semigroup a
+        , S.Semigroup b
+        , Monoid a
+        , Monoid b) => Arbitrary (Two a b) where
+   arbitrary = do
+     a <- arbitrary
+     b <- arbitrary
+     return $ Two a b
+
+
+instance (S.Semigroup a, S.Semigroup b) => S.Semigroup (Two a b) where
+  (Two a b) <> (Two a' b') = Two (a S.<> a') (b S.<> b')
+
+instance (Monoid a, S.Semigroup a, Monoid b,  S.Semigroup b) => Monoid (Two a b) where
+  mempty = Two mempty mempty
+  mappend = (S.<>)
+
+type TwoAssoc a b = (Two a b) -> (Two a b) -> (Two a b) -> Bool
+
+-------------------------------------------
 
 tests :: IO ()
 tests = hspec $ do
@@ -69,3 +94,10 @@ tests = hspec $ do
       quickCheck (monoidLeftIdentity :: (Identity (Sum Int)) -> Bool)
     it "Identity lid" $ do
       quickCheck (monoidRightIdentity :: (Identity (Sum Int))  -> Bool)
+  describe "Two" $ do
+    it "Two assoc" $ do
+      quickCheck (semigroupAssoc :: (TwoAssoc String (Sum Int) ))
+    it "Two rid" $ do
+      quickCheck (monoidLeftIdentity :: (Two String (Sum Int)) -> Bool)
+    it "Two lid" $ do
+      quickCheck (monoidRightIdentity :: (Two String (Sum Int))  -> Bool)
