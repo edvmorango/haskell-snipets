@@ -98,6 +98,15 @@ newtype BoolDisj = BoolDisj Bool deriving (Eq, Show)
 instance Semigroup (BoolDisj) where
   (BoolDisj a) <> (BoolDisj b) = BoolDisj (a || b)
 
+----------------------
+
+data Or a b = Fst a | Snd b deriving (Eq, Show)
+
+instance Semigroup (Or a b) where
+  (Fst a) <> (Fst b) = Fst b
+  (Fst a) <> (Snd b) = Snd b
+  (Snd a) <> _ = Snd a
+
 
 tests :: IO ()
 tests = hspec $ do
@@ -120,3 +129,11 @@ tests = hspec $ do
       ((BoolDisj True) <> (BoolDisj False)) `shouldBe` (BoolDisj True)
     it "bool disj 2" $ do
       ((BoolDisj False) <> (BoolDisj False)) `shouldBe` (BoolDisj False)
+    it "or 1" $ do
+      ((Fst 10) <> (Snd 20)) `shouldBe` (Snd 20)
+    it "or 2" $ do
+      ((((Fst 10) :: Or Int Int)) <> ((Fst 20) :: Or Int Int)) `shouldBe` (((Fst 20) :: Or Int Int))
+    it "or 3" $ do
+      ((Snd 10) <> (Fst 20)) `shouldBe` (Snd 10)
+    it "or 4" $ do
+      ((((Snd 10) :: Or Int Int)) <> ((Snd 20) :: Or Int Int)) `shouldBe` (((Snd 10) :: Or Int Int))
