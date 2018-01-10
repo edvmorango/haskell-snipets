@@ -34,12 +34,6 @@ type TrivAssoc = Trivial -> Trivial -> Trivial -> Bool
 
 type IdentityType a =  Identity a -> Identity a -> Bool
 
-
-genT :: (Arbitrary a) => Gen a
-genT = do
-  a <- arbitrary
-  return a
-
 instance Arbitrary Trivial where
   arbitrary = return Trivial
 
@@ -48,7 +42,52 @@ instance (Arbitrary a) => Arbitrary (Identity a) where
     b <- arbitrary
     return $ Identity b
 
+----
 
+data Two a b = Two a b deriving (Eq, Show)
+
+instance (Semigroup a, Semigroup b) => Semigroup (Two a b) where
+  (Two a b) <> (Two a' b') = Two (a <> a') (b <> b')
+
+instance (Arbitrary a, Arbitrary b) => Arbitrary (Two a b) where
+  arbitrary = do
+    a <- arbitrary
+    b <- arbitrary
+    return $ Two a b
+
+data Three a b c = Three a b c deriving (Eq, Show)
+
+instance (Semigroup a, Semigroup b, Semigroup c) => Semigroup (Three a b c) where
+    (Three a b c) <> (Three a' b' c')  = Three (a <> a') (b <> b') (c <> c')
+
+instance (Arbitrary a, Arbitrary b, Arbitrary c) => Arbitrary (Three a b c) where
+  arbitrary = do
+    a <- arbitrary
+    b <- arbitrary
+    c <- arbitrary
+    return $ Three a b c
+
+
+data Four a b c d = Four a b c d deriving (Eq, Show)
+
+instance (Semigroup a, Semigroup b, Semigroup c, Semigroup d) => Semigroup (Four a b c d) where
+    (Four a b c d) <> (Four a' b' c' d')  = Four (a <> a') (b <> b') (c <> c') (d <> d')
+
+instance (Arbitrary a, Arbitrary b, Arbitrary c, Arbitrary d) => Arbitrary (Four a b c d) where
+  arbitrary = do
+    a <- arbitrary
+    b <- arbitrary
+    c <- arbitrary
+    d <- arbitrary
+    return $ Four a b c d
+
+
+
+type TwoAssoc a b = Two a b -> Two a b -> Two a b -> Bool
+type ThreeAssoc a b c = Three a b c -> Three a b c -> Three a b c -> Bool
+type FourAssoc a b c d= Four a b c d -> Four a b c d -> Four a b c d-> Bool
+
+----
 
 tests :: IO ()
 tests = hspec $ do
@@ -57,3 +96,9 @@ tests = hspec $ do
       quickCheck (semigroupAssoc :: TrivAssoc)
     it "identity" $ do
       quickCheck (identity :: (IdentityType Int))
+    it "associativity two" $ do
+      quickCheck (semigroupAssoc :: (TwoAssoc (Sum Integer) String))
+    it "associativity three" $ do
+      quickCheck (semigroupAssoc :: (ThreeAssoc (Sum Integer) String String))
+    it "associativity four" $ do
+      quickCheck (semigroupAssoc :: (FourAssoc String String (Product Integer) String))
