@@ -95,6 +95,21 @@ instance Monoid (BoolConj) where
 type BoolConjType = BoolConj -> BoolConj -> BoolConj -> Bool
 
 -------------------------------------------
+newtype BoolDisj = BoolDisj Bool deriving (Eq, Show)
+
+instance Arbitrary (BoolDisj) where
+  arbitrary = do
+    a <- arbitrary
+    return $ (BoolDisj a)
+
+instance  S.Semigroup (BoolDisj) where
+  (BoolDisj a) <> (BoolDisj a') = BoolDisj (a || a')
+
+instance Monoid (BoolDisj) where
+  mempty = BoolDisj (False)
+  mappend = (S.<>)
+
+type BoolDisjType = BoolDisj -> BoolDisj -> BoolDisj -> Bool
 -------------------------------------------
 -------------------------------------------
 -------------------------------------------
@@ -133,3 +148,10 @@ tests = hspec $ do
       quickCheck (monoidLeftIdentity :: (BoolConj -> Bool))
     it "BoolConj lid" $ do
       quickCheck (monoidRightIdentity :: (BoolConj -> Bool))
+  describe "BoolDisj" $ do
+    it "BoolDisj assoc" $ do
+      quickCheck (semigroupAssoc :: (BoolDisjType))
+    it "BoolDisj rid" $ do
+      quickCheck (monoidLeftIdentity :: (BoolDisj -> Bool))
+    it "BoolDisj lid" $ do
+      quickCheck (monoidRightIdentity :: (BoolDisj -> Bool))
