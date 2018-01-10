@@ -81,13 +81,23 @@ instance (Arbitrary a, Arbitrary b, Arbitrary c, Arbitrary d) => Arbitrary (Four
     d <- arbitrary
     return $ Four a b c d
 
-
-
 type TwoAssoc a b = Two a b -> Two a b -> Two a b -> Bool
 type ThreeAssoc a b c = Three a b c -> Three a b c -> Three a b c -> Bool
 type FourAssoc a b c d= Four a b c d -> Four a b c d -> Four a b c d-> Bool
 
-----
+---------------------
+
+
+newtype BoolConj = BoolConj Bool  deriving (Eq, Show)
+
+instance Semigroup (BoolConj) where
+  (BoolConj a) <> (BoolConj b) = BoolConj (a && b)
+
+newtype BoolDisj = BoolDisj Bool deriving (Eq, Show)
+
+instance Semigroup (BoolDisj) where
+  (BoolDisj a) <> (BoolDisj b) = BoolDisj (a || b)
+
 
 tests :: IO ()
 tests = hspec $ do
@@ -102,3 +112,11 @@ tests = hspec $ do
       quickCheck (semigroupAssoc :: (ThreeAssoc (Sum Integer) String String))
     it "associativity four" $ do
       quickCheck (semigroupAssoc :: (FourAssoc String String (Product Integer) String))
+    it "bool conj " $ do
+      ((BoolConj True) <> (BoolConj False)) `shouldBe` (BoolConj False)
+    it "bool conj 2" $ do
+      ((BoolConj True) <> (BoolConj True)) `shouldBe` (BoolConj True)
+    it "bool disj 1" $ do
+      ((BoolDisj True) <> (BoolDisj False)) `shouldBe` (BoolDisj True)
+    it "bool disj 2" $ do
+      ((BoolDisj False) <> (BoolDisj False)) `shouldBe` (BoolDisj False)
