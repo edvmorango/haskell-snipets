@@ -108,6 +108,16 @@ instance Semigroup (Or a b) where
   (Snd a) <> _ = Snd a
 
 
+----------------------
+
+newtype Combine a b = Combine { unCombine :: (a -> b) }
+
+instance (Semigroup b) => Semigroup (Combine a b) where -- The result will always b, so just Combine it
+    Combine b <> Combine b' = Combine (b <> b')
+
+fCombine = Combine $ \n -> Sum (n + 1)
+gCombine = Combine $ \n -> Sum (n - 1)
+
 tests :: IO ()
 tests = hspec $ do
    describe "Semigroup" $ do
@@ -137,3 +147,11 @@ tests = hspec $ do
       ((Snd 10) <> (Fst 20)) `shouldBe` (Snd 10)
     it "or 4" $ do
       ((((Snd 10) :: Or Int Int)) <> ((Snd 20) :: Or Int Int)) `shouldBe` (((Snd 10) :: Or Int Int))
+    it "combine 1" $ do
+      (unCombine (fCombine <> gCombine)) 0 `shouldBe` 0
+    it "combine 2" $ do
+      (unCombine (fCombine <> gCombine)) 1 `shouldBe` 2
+    it "combine 3" $ do
+      (unCombine (fCombine <> fCombine)) 1 `shouldBe` 4
+    it "combine 4" $ do
+      (unCombine (gCombine <> fCombine)) 1 `shouldBe` 2
