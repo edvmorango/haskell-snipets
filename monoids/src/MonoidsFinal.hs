@@ -78,6 +78,31 @@ type TwoAssoc a b = (Two a b) -> (Two a b) -> (Two a b) -> Bool
 
 -------------------------------------------
 
+newtype BoolConj = BoolConj Bool deriving (Eq, Show)
+
+instance Arbitrary (BoolConj) where
+  arbitrary = do
+    a <- arbitrary
+    return $ (BoolConj a)
+
+instance  S.Semigroup (BoolConj) where
+  (BoolConj a) <> (BoolConj a') = BoolConj (a && a')
+
+instance Monoid (BoolConj) where
+  mempty = BoolConj (True)
+  mappend = (S.<>)
+
+type BoolConjType = BoolConj -> BoolConj -> BoolConj -> Bool
+
+-------------------------------------------
+-------------------------------------------
+-------------------------------------------
+-------------------------------------------
+-------------------------------------------
+-------------------------------------------
+-------------------------------------------
+-------------------------------------------
+
 tests :: IO ()
 tests = hspec $ do
   describe "Trivial" $ do
@@ -101,3 +126,10 @@ tests = hspec $ do
       quickCheck (monoidLeftIdentity :: (Two String (Sum Int)) -> Bool)
     it "Two lid" $ do
       quickCheck (monoidRightIdentity :: (Two String (Sum Int))  -> Bool)
+  describe "BoolConj" $ do
+    it "BoolConj assoc" $ do
+      quickCheck (semigroupAssoc :: (BoolConjType))
+    it "BoolConj rid" $ do
+      quickCheck (monoidLeftIdentity :: (BoolConj -> Bool))
+    it "BoolConj lid" $ do
+      quickCheck (monoidRightIdentity :: (BoolConj -> Bool))
