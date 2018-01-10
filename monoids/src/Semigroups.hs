@@ -42,8 +42,6 @@ instance (Arbitrary a) => Arbitrary (Identity a) where
     b <- arbitrary
     return $ Identity b
 
-----
-
 data Two a b = Two a b deriving (Eq, Show)
 
 instance (Semigroup a, Semigroup b) => Semigroup (Two a b) where
@@ -118,6 +116,25 @@ instance (Semigroup b) => Semigroup (Combine a b) where -- The result will alway
 fCombine = Combine $ \n -> Sum (n + 1)
 gCombine = Combine $ \n -> Sum (n - 1)
 
+--------------------------
+
+newtype Comp a = Comp { unComp :: (a -> a) }
+
+instance (Semigroup a) => Semigroup (Comp a) where
+  (Comp a) <> (Comp a') = Comp (a <> a')
+
+
+------------------------
+data Validation a b = Fail a | Suc b deriving (Eq, Show)
+
+instance (Semigroup a, Semigroup b) => Semigroup (Validation a b) where
+    (Suc b) <> _ = (Suc b)
+    (Fail a) <> (Fail a') = Fail ( a <> a')
+    (Suc b) <> (Suc _) = Suc b
+    _ <> (Suc b) = (Suc b)
+
+------------------------
+
 tests :: IO ()
 tests = hspec $ do
    describe "Semigroup" $ do
@@ -155,3 +172,11 @@ tests = hspec $ do
       (unCombine (fCombine <> fCombine)) 1 `shouldBe` 4
     it "combine 4" $ do
       (unCombine (gCombine <> fCombine)) 1 `shouldBe` 2
+    it "validation 1" $ do
+      (((Fail "fail") :: Validation String (Sum Int)) <> ((Fail "fish") :: Validation String (Sum Int))) `shouldBe` (Fail "failfish")
+    it "validation 2" $ do
+      (Suc (Sum 10)) <> (Fail "fish") `shouldBe` (Suc (Sum 10))
+    it "validation 3" $ do
+      (Fail "fail") <> (Suc (Sum 10)) `shouldBe` (Suc (Sum 10))
+    it "validation 4" $ do
+      ( (Suc (Sum 10) :: Validation String (Sum Int))  <> (Suc (Sum 20) :: Validation String (Sum Int)) ) `shouldBe` (Suc (Sum {getSum = 10}))
