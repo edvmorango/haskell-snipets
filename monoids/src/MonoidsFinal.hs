@@ -1,8 +1,11 @@
+{-# LANGUAGE DeriveGeneric #-}
+
 module MonoidsFinal where
 
 import Test.QuickCheck
 import Test.Hspec
 import Data.Monoid
+import GHC.Generics
 import qualified Data.Semigroup as S
 
 
@@ -111,6 +114,32 @@ instance Monoid (BoolDisj) where
 
 type BoolDisjType = BoolDisj -> BoolDisj -> BoolDisj -> Bool
 -------------------------------------------
+
+genFunc :: (CoArbitrary a, Arbitrary b) => Gen (a -> b)
+genFunc = arbitrary
+
+-------------------------------------------
+newtype Combine a b = Combine { unCombine :: (a -> b) }
+
+genCoCombine :: (CoArbitrary a, Arbitrary b) => Gen (Combine a b)
+genCoCombine = do
+  f <- genFunc
+  return $ Combine f
+
+
+instance (CoArbitrary a, Arbitrary b) => Arbitrary (Combine a b) where
+  arbitrary = genCoCombine
+
+instance (S.Semigroup b) => S.Semigroup (Combine a b) where
+  (Combine b) <> (Combine b') = Combine ( b S.<> b')
+
+instance (S.Semigroup b, Monoid b) => Monoid (Combine a b) where
+  mempty = Combine (mempty)
+  mappend = (S.<>)
+
+
+type CombineType a b = (Combine a b) -> (Combine a b) -> (Combine a b) -> Bool
+
 -------------------------------------------
 -------------------------------------------
 -------------------------------------------
@@ -155,3 +184,10 @@ tests = hspec $ do
       quickCheck (monoidLeftIdentity :: (BoolDisj -> Bool))
     it "BoolDisj lid" $ do
       quickCheck (monoidRightIdentity :: (BoolDisj -> Bool))
+  -- describe "Combine" $ do
+    -- it "Combine assoc" $ do
+      -- quickCheck (semigroupAssoc :: (CombineType String String))
+    -- it "Combine rid" $ do
+      -- quickCheck (monoidLeftIdentity :: (Combine (Sum Int) String -> Bool))
+    -- it "Combine lid" $ do
+      -- quickCheck (monoidRightIdentity :: (Combine (Sum Int) String -> Bool))
