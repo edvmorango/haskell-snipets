@@ -126,7 +126,6 @@ genCoCombine = do
   f <- genFunc
   return $ Combine f
 
-
 instance (CoArbitrary a, Arbitrary b) => Arbitrary (Combine a b) where
   arbitrary = genCoCombine
 
@@ -141,6 +140,30 @@ instance (S.Semigroup b, Monoid b) => Monoid (Combine a b) where
 type CombineType a b = (Combine a b) -> (Combine a b) -> (Combine a b) -> Bool
 
 -------------------------------------------
+newtype Comp a = Comp (a -> a)
+
+genFunA :: (CoArbitrary a, Arbitrary a) => Gen (a -> a)
+genFunA = arbitrary
+
+genCoComp :: (CoArbitrary a, Arbitrary a ) => Gen (Comp a)
+genCoComp = do
+  f <- genFunA
+  return $ Comp f
+
+instance (CoArbitrary a, Arbitrary a) => Arbitrary (Comp a) where
+  arbitrary = genCoComp
+
+instance (S.Semigroup a) => S.Semigroup (Comp a) where
+  (Comp a) <> (Comp a') = Comp ( a S.<> a')
+
+instance (S.Semigroup a, Monoid a) => Monoid (Comp a) where
+  mempty = Comp (mempty)
+  mappend = (S.<>)
+
+
+type CompType a b = (Comp a) -> (Comp a ) -> (Comp a ) -> Bool
+
+
 -------------------------------------------
 -------------------------------------------
 -------------------------------------------
