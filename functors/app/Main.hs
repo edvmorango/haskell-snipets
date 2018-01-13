@@ -3,4 +3,4 @@ module Main where
 import Functors
 
 main :: IO ()
-main = someFunc
+main = do putStrLn "Main"
