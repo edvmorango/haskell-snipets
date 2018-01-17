@@ -1,3 +1,5 @@
+{-# LANGUAGE ViewPatterns #-}
+
 module Functors where
 
 import Test.QuickCheck
@@ -81,6 +83,41 @@ type FunctorIdentityType a = Wrap a -> Bool
 type FunctorIdentityCompositionType' a = Fun a a -> Fun a a -> Wrap a -> Bool
 type FunctorIdentityCompositionType a b = Fun a b -> Fun b a -> Wrap a -> Bool
 
+---
+
+data Pair a = Pair a a deriving (Eq, Show)
+
+instance Functor Pair where
+  fmap f (Pair a a') = Pair (f a) (f a')
+
+instance (Arbitrary a, Eq a) => Arbitrary (Pair a) where
+  arbitrary = do
+    a <- arbitrary
+    return $ Pair a a
+
+type PairType a = Pair a -> Bool
+type PairCompositionType' a = Fun a a -> Fun a a -> Pair a  -> Bool
+type PairCompositionType a b = Fun a b -> Fun b a -> Pair a -> Bool
+
+instance (Arbitrary a, Arbitrary b) => Arbitrary (Two a b) where
+  arbitrary = do
+    a <- arbitrary
+    b <- arbitrary
+    return $ Two a b
+
+type TwoType a b = Two a b -> Bool
+-- type TwoCompositionType' a c = Fun a a -> Fun a a -> Two a c -> Bool
+type TwoCompositionType a b c = Fun b c -> Fun b c -> Two a b -> Bool
+
+
+
+-- data Two a b = Two a b
+data Three a b c = Three a b c deriving (Eq, Show)
+data Three' a b = Three' a b b deriving (Eq, Show)
+data Four a b c d = Four a b c d deriving (Eq, Show)
+data Four' a b = Four' a a a b deriving (Eq, Show)
+data Trivial = Trivial deriving (Eq, Show)
+
 
 tests :: IO()
 tests = hspec $ do
@@ -88,6 +125,30 @@ tests = hspec $ do
     it "f a(Int) identity" $ do
       quickCheck (functorIdentity :: FunctorIdentityType Int )
     it "f a -> g a composition " $ do
+      quickCheck (functorCompose' :: FunctorIdentityCompositionType Int Float)
+    it "Pair identity" $ do
+      quickCheck (functorIdentity :: PairType Int )
+    it "Pair composition " $ do
+      quickCheck (functorCompose' :: PairCompositionType Int Float)
+    it "Two identity" $ do
+      quickCheck (functorIdentity :: TwoType Int String )
+    it "Two composition " $ do
+      quickCheck (functorCompose' :: TwoCompositionType Int String String)
+    it "Three identity" $ do
+      quickCheck (functorIdentity :: FunctorIdentityType Int )
+    it "Three composition " $ do
+      quickCheck (functorCompose' :: FunctorIdentityCompositionType Int Float)
+    it "Three' identity" $ do
+      quickCheck (functorIdentity :: FunctorIdentityType Int )
+    it "Three' composition " $ do
+      quickCheck (functorCompose' :: FunctorIdentityCompositionType Int Float)
+    it "Four identity" $ do
+      quickCheck (functorIdentity :: FunctorIdentityType Int )
+    it "Four composition " $ do
+      quickCheck (functorCompose' :: FunctorIdentityCompositionType Int Float)
+    it "Four' identity" $ do
+      quickCheck (functorIdentity :: FunctorIdentityType Int )
+    it "Four' composition " $ do
       quickCheck (functorCompose' :: FunctorIdentityCompositionType Int Float)
 
 
