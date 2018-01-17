@@ -106,14 +106,45 @@ instance (Arbitrary a, Arbitrary b) => Arbitrary (Two a b) where
     return $ Two a b
 
 type TwoType a b = Two a b -> Bool
--- type TwoCompositionType' a c = Fun a a -> Fun a a -> Two a c -> Bool
 type TwoCompositionType a b c = Fun b c -> Fun b c -> Two a b -> Bool
 
+----
 
-
--- data Two a b = Two a b
 data Three a b c = Three a b c deriving (Eq, Show)
+
+instance Functor (Three a b) where
+  fmap f (Three a b c) = Three a b (f c)
+
+instance (Arbitrary a, Arbitrary b, Arbitrary c) => Arbitrary (Three a b c) where
+  arbitrary = do
+    a <- arbitrary
+    b <- arbitrary
+    c <- arbitrary
+    return $ Three a b c
+
+type ThreeType a b c = Three a b c -> Bool
+type ThreeCompositionType a b c d = Fun c d -> Fun c d -> Three a b c -> Bool
+
+
+
 data Three' a b = Three' a b b deriving (Eq, Show)
+
+
+-- Functors are about lift the last type (more to right), not just the last param
+instance Functor (Three' a ) where
+  fmap f (Three' a b b') = Three' a  (f b) (f b')
+
+instance (Arbitrary a, Arbitrary b ) => Arbitrary (Three' a b) where
+  arbitrary = do
+    a <- arbitrary
+    b <- arbitrary
+    return $ Three' a b b
+
+type Three'Type a b  = Three' a b  -> Bool
+type Three'CompositionType a b c = Fun b c -> Fun b c -> Three' a b -> Bool
+
+
+
 data Four a b c d = Four a b c d deriving (Eq, Show)
 data Four' a b = Four' a a a b deriving (Eq, Show)
 data Trivial = Trivial deriving (Eq, Show)
@@ -135,13 +166,13 @@ tests = hspec $ do
     it "Two composition " $ do
       quickCheck (functorCompose' :: TwoCompositionType Int String String)
     it "Three identity" $ do
-      quickCheck (functorIdentity :: FunctorIdentityType Int )
+      quickCheck (functorIdentity :: ThreeType Int Int Int)
     it "Three composition " $ do
-      quickCheck (functorCompose' :: FunctorIdentityCompositionType Int Float)
+      quickCheck (functorCompose' :: ThreeCompositionType Int Int Int Int)
     it "Three' identity" $ do
-      quickCheck (functorIdentity :: FunctorIdentityType Int )
+      quickCheck (functorIdentity :: Three'Type Int Int )
     it "Three' composition " $ do
-      quickCheck (functorCompose' :: FunctorIdentityCompositionType Int Float)
+      quickCheck (functorCompose' :: Three'CompositionType Int String String)
     it "Four identity" $ do
       quickCheck (functorIdentity :: FunctorIdentityType Int )
     it "Four composition " $ do
