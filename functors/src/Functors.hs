@@ -1,6 +1,7 @@
 module Functors where
 
 import Test.QuickCheck
+import Test.QuickCheck.Function
 import Test.Hspec
 
 
@@ -54,27 +55,40 @@ instance Functor (Two a) where
 
 --------- TEsts
 
+functorIdentity :: (Functor f, Eq (f a) ) => f a -> Bool
+functorIdentity f = fmap (id) f == f
+
+functorCompose :: (Eq (f c), Functor f) => (a -> b) -> (b -> c) -> f a -> Bool
+functorCompose f g x =  ( fmap g (fmap f x) ) == ( fmap (g.f) x )
+
+functorCompose' :: (Functor f, Eq (f c)) => Fun a b -> Fun b c -> f a -> Bool
+functorCompose' (Fun _ f) (Fun _ g) x =
+  (fmap g (fmap f x)) == (fmap (g . f) x)
+
+--
+
 newtype Wrap a = Wrap a deriving (Eq, Show)
 
 instance Functor Wrap where
   fmap f (Wrap a) = Wrap (f a)
 
-instance (Arbitrary a, Eq a) => Arbitrary (Wrap a) where
+instance (Arbitrary a) => Arbitrary (Wrap a) where
   arbitrary = do
     a <- arbitrary
     return $ Wrap a
 
-functorIdentity :: (Functor f, Eq (f a) ) => f a -> Bool
-functorIdentity f = fmap (id) f == f
-
 type FunctorIdentityType a = Wrap a -> Bool
+type FunctorIdentityCompositionType' a = Fun a a -> Fun a a -> Wrap a -> Bool
+type FunctorIdentityCompositionType a b = Fun a b -> Fun b a -> Wrap a -> Bool
+
 
 tests :: IO()
 tests = hspec $ do
   describe "Functors" $ do
     it "f a(Int) identity" $ do
       quickCheck (functorIdentity :: FunctorIdentityType Int )
-
+    it "f a -> g a composition " $ do
+      quickCheck (functorCompose' :: FunctorIdentityCompositionType Int Float)
 
 
 
