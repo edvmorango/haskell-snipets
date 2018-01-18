@@ -143,11 +143,43 @@ instance (Arbitrary a, Arbitrary b ) => Arbitrary (Three' a b) where
 type Three'Type a b  = Three' a b  -> Bool
 type Three'CompositionType a b c = Fun b c -> Fun b c -> Three' a b -> Bool
 
-
+--
 
 data Four a b c d = Four a b c d deriving (Eq, Show)
+
+instance Functor (Four a b c) where
+  fmap f (Four a b c d) = Four a b c (f d)
+
+instance (Arbitrary a, Arbitrary b, Arbitrary c, Arbitrary d) => Arbitrary (Four a b c d) where
+  arbitrary = do
+    a <- arbitrary
+    b <- arbitrary
+    c <- arbitrary
+    d <- arbitrary
+    return $ Four a b c d
+
+type FourType a b c d = Four a b c d -> Bool
+type FourCompositionType a b c d e = Fun  d e -> Fun d e -> Four a b c d -> Bool
+
+--
+
 data Four' a b = Four' a a a b deriving (Eq, Show)
-data Trivial = Trivial deriving (Eq, Show)
+
+instance Functor (Four' a) where
+  fmap f (Four' a a' a'' b) = Four' a a' a'' (f b)
+
+instance (Arbitrary a, Arbitrary b) => Arbitrary (Four' a b) where
+  arbitrary = do
+    a <- arbitrary
+    a' <- arbitrary
+    a'' <- arbitrary
+    b <- arbitrary
+    return $ Four' a a' a'' b
+
+type Four'Type a b = Four' a b  -> Bool
+type Four'CompositionType a b c = Fun b c -> Fun b c -> Four' a b -> Bool
+
+--
 
 
 tests :: IO()
@@ -174,17 +206,13 @@ tests = hspec $ do
     it "Three' composition " $ do
       quickCheck (functorCompose' :: Three'CompositionType Int String String)
     it "Four identity" $ do
-      quickCheck (functorIdentity :: FunctorIdentityType Int )
+      quickCheck (functorIdentity :: FourType Int Int Double Int )
     it "Four composition " $ do
-      quickCheck (functorCompose' :: FunctorIdentityCompositionType Int Float)
+      quickCheck (functorCompose' :: FourCompositionType Int Int Int String String)
     it "Four' identity" $ do
-      quickCheck (functorIdentity :: FunctorIdentityType Int )
+      quickCheck (functorIdentity :: Four'Type Int Float )
     it "Four' composition " $ do
-      quickCheck (functorCompose' :: FunctorIdentityCompositionType Int Float)
-
-
-
-
+      quickCheck (functorCompose' :: Four'CompositionType Int Float Float )
 
 
 --
