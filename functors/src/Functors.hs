@@ -1,5 +1,5 @@
 {-# LANGUAGE ViewPatterns #-}
-
+{-# LANGUAGE RankNTypes #-}
 module Functors where
 
 import Test.QuickCheck
@@ -181,6 +181,34 @@ type Four'CompositionType a b c = Fun b c -> Fun b c -> Four' a b -> Bool
 
 --
 
+
+
+-- Possibly
+
+data Option a = None | Some a deriving (Eq,Show)
+
+instance Functor Option where
+  fmap f (Some a) = Some (f a)
+  fmap _ _ = None
+
+instance (Arbitrary a) => Arbitrary (Option a) where
+  arbitrary = do
+    a <- arbitrary
+    return $ Some (a)
+
+data Try a b = Fail a | Suc b deriving (Eq, Show)
+
+instance Functor (Try a) where
+  fmap f (Fail a) = Fail a
+  fmap f (Suc b) = Suc (f b)
+
+
+---
+
+getInt :: IO Int
+getInt = fmap read getLine
+
+type Nat f g = forall a . f a -> g a
 
 tests :: IO()
 tests = hspec $ do
