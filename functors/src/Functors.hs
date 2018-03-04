@@ -5,7 +5,7 @@ module Functors where
 import Test.QuickCheck
 import Test.QuickCheck.Function
 import Test.Hspec
-
+import GHC.Arr
 
 data FixMePls a =  FixMe | Pls a deriving (Eq, Show)
 
@@ -203,7 +203,35 @@ instance Functor (Try a) where
   fmap f (Suc b) = Suc (f b)
 
 
----
+applyTry :: (s -> b) -> (Try f s) -> (Try f b)
+applyTry f fa =  f <$> fa
+
+--- CHapter exercises
+
+
+
+data FollowedBool a = FTrue a | FFalse a deriving (Eq, Show)
+
+
+instance Functor (FollowedBool) where
+  fmap f (FTrue a) = FTrue (f a)
+  fmap f (FFalse b) = FFalse (f b)
+
+
+data OptionalBool a = OTrue a | OFalse deriving (Eq, Show)
+
+instance Functor (OptionalBool) where
+  fmap _ (OFalse) = OFalse
+  fmap f (OTrue a) = OTrue (f a)
+
+
+newtype Mu f = InF { outF :: f (Mu f)} 
+
+-- instance Functor (Mu) where
+--   fmap f (InF (outF a)) = InF (ouF (fa)) 
+
+
+
 
 getInt :: IO Int
 getInt = fmap read getLine
