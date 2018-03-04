@@ -1,5 +1,7 @@
 {-# LANGUAGE ViewPatterns #-}
 {-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE FlexibleInstances #-}
+
 module Functors where
 
 import Test.QuickCheck
@@ -253,6 +255,33 @@ instance Functor (More x) where
   fmap f (L a b a') = L a (f b) a' 
   fmap f (R b a b') = R (f b) a (f b')
 
+data Quant a b = Finance | Desk a | Bloor b
+
+instance Functor (Quant a) where
+  fmap f (Bloor b) = Bloor (f b)
+  fmap _ Finance = Finance
+  fmap _ (Desk a) = Desk a
+
+data K a b = K a
+
+instance Functor (K x) where
+  fmap _ (K a) = K a
+
+newtype Flip f a b = Flip (f b a) deriving (Eq, Show)
+
+instance Functor (Flip K a) where
+  fmap f (Flip (K a) ) = Flip $ K (f a)
+
+
+
+data EvilGoateeConst a b = GoatyConst b
+
+--Should use the most generic ADT (phantom type ?)
+instance Functor (EvilGoateeConst x) where
+  fmap f (GoatyConst a) = GoatyConst (f a)
+
+
+    
 
 
 getInt :: IO Int
