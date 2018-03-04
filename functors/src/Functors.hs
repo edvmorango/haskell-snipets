@@ -225,11 +225,33 @@ instance Functor (OptionalBool) where
   fmap f (OTrue a) = OTrue (f a)
 
 
-newtype Mu f = InF { outF :: f (Mu f)} 
+-- don't work, and I not found any solution 
+newtype Mu f = InF { outF :: f (Mu f)}  
 
--- instance Functor (Mu) where
---   fmap f (InF (outF a)) = InF (ouF (fa)) 
+-- Rearrange
+data Sum a b = First a | Second b
 
+instance Functor (Sum e) where 
+  fmap f (First a) = First a
+  fmap f (Second b) = Second (f b)
+
+
+data Company a b c = DeepBlue a c | Something b
+
+
+instance Functor (Company e e') where 
+  fmap f (DeepBlue a c) = DeepBlue (a) (f c)
+  fmap _ (Something b) = Something b
+
+data More a b = L a b a | R b a b deriving (Eq, Show)
+
+-- functors transforms just one type, 
+-- the hidden, X -> A, so B will be modified
+-- so, just the last parameter is `functable`
+-- without the flip using.
+instance Functor (More x) where
+  fmap f (L a b a') = L a (f b) a' 
+  fmap f (R b a b') = R (f b) a (f b')
 
 
 
