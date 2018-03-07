@@ -52,7 +52,8 @@ mkPerson' n a = liftA2 Person (mkName n) (mkAge a)
 
 
 
-
+ex1 = const <$> Just "Hello" <*> Just "World"
+ex2 = (,,,) <$> Just 90 <*> Just 10 <*> Just "Tierness" <*> (pure [1, 2, 3])
 
 
 
