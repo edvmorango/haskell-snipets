@@ -1,11 +1,11 @@
-{-# LANGUAGE DeriveGeneric #-}
-
 module Applicatives where
 
+import Data.Monoid
 import Test.QuickCheck
 import Test.QuickCheck.Function
+import Test.QuickCheck.Checkers 
+import Test.QuickCheck.Classes
 import Test.Hspec
-import GHC.Generics
 
 -- Generators
 
@@ -29,6 +29,26 @@ type ACompose = Maybe Int ->  (Fun  Int Int) -> (Fun Int Int) -> Bool
 
 apCompose :: (Eq (f c), Applicative f) => f a ->  (Fun a b ) -> (Fun b c) -> Bool
 apCompose v  (Fun _ f)  (Fun _ g) = ((pure (.) <*> (pure g) <*> (pure f) <*> v )) == ((pure g) <*> ( (pure f) <*> v))
+
+---Checkers
+
+data Bull = Fo | Tw deriving (Eq, Show)
+
+instance Arbitrary Bull where
+  arbitrary = frequency [ (1, return Fo), (1, return Tw)]
+
+instance Monoid Bull where
+  mempty = Fo
+  mappend Tw _ = Tw
+  mappend _ Tw = Tw
+  mappend _ _ = Fo
+  
+instance EqProp Bull where (=-=) = eq  
+
+
+type TApplicative = (Char, Char, Char)
+
+
 
 tests :: IO()
 tests = hspec $ do
@@ -54,8 +74,10 @@ tests = hspec $ do
               ic = pure ($ v) <*> pure (+1) :: Maybe Int
           in ap == ic
           )
-      
-      
+    it "Monoid test with checkers" $ do 
+         quickBatch (monoid Tw)  
+    it "Applicative " $ do
+          quickBatch (applicative [('a', 20 :: Int, 30 :: Double)] )
       
       
       
