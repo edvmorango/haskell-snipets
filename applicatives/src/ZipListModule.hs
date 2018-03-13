@@ -5,6 +5,7 @@ import Data.Monoid
 import Test.QuickCheck.Arbitrary
 import Test.QuickCheck.Checkers 
 import Test.QuickCheck.Classes
+import Test.QuickCheck
 
 
 instance (Show a, Monoid a) => Monoid (ZipList a) where
@@ -44,16 +45,15 @@ instance Applicative (List) where
   (<*>) _ Nil = Nil
   (<*>) (Cons f n) l  = (fmap f l) <> (n <*> l) 
        
-newtype ZipList' a = ZipList' (List a) deriving (Eq, Show)
+
+newtype ListZ a = ListZ (List a) deriving (Eq, Show)
 
 -- `eq` comes from Checkers
-instance Eq a => EqProp (ZipList' a) where
+instance Eq a => EqProp (ListZ a) where
   xs =-= ys = xs' `eq` ys'
-    where xs' = let (ZipList' l) = xs in take' 3000 l
-          ys' = let (ZipList' l) = ys in take' 3000 l
+    where xs' = let (ListZ l) = xs in take' 3000 l
+          ys' = let (ListZ l) = ys in take' 3000 l
 
-
-newtype ListZ a = ListZ (List a)
 
 instance  Monoid a => Monoid (ListZ a) where
   mempty = ListZ Nil
@@ -62,17 +62,27 @@ instance  Monoid a => Monoid (ListZ a) where
           zipper _ Nil = Nil
           zipper (Cons w nw) (Cons w' nw') = (Cons (w <> w') (zipper nw nw') )    
 
-instance Functor ZipList' where 
-  fmap f (ZipList' xs) = 
-    ZipList' $ fmap f xs
+instance Functor ListZ where
+  fmap f (ListZ xs) = ListZ (fmap f xs)
 
--- (f a -> b) -> f a -> f b
--- instance Applicative ZipList' where 
-  -- pure a = ZipList' (pure a) 
-  -- (<*>) (ZipList' Nil) _ = ZipList' Nil
-  -- (<*>) _ (ZipList' Nil) = ZipList' Nil
-  -- (<*>) (ZipList' (Cons c n)) (ZipList' l  ) = ZipList' ((fmap c l) <> (n <*>  (tail )))
- 
+instance Applicative ListZ where 
+  pure a = ListZ $ Cons a Nil 
+  (<*>) (ListZ (Cons f nf)) (ListZ r) = ListZ $ (fmap f r) <> (nf <*> r) 
+
+
+
+instance Arbitrary a => Arbitrary (List a) where
+  arbitrary = do
+      a <- arbitrary
+      b <- arbitrary
+      elements [ Cons a (Cons b Nil), Nil]
+
+
+instance Arbitrary a => Arbitrary (ListZ a) where
+  arbitrary = do
+    a <- arbitrary
+    return $ ListZ a
+
 -- tests :: IO()
 -- tests = hspec $ do
 --   describe "ZipList tests" $ do
