@@ -79,8 +79,16 @@ instance Functor (Three' a) where
 instance (Monoid a) => Applicative (Three' a) where
   pure c = Three' (mempty) c c
   (<*>) (Three' a fb fb') (Three' a' b b') = Three' (mappend a a') (fb b) (fb' b')
-       
 
+-- Four
+data Four a b c d = Four a b c d deriving (Eq, Show)
+
+instance Functor (Four a b c) where
+  fmap f (Four a b c d) = Four a b c (f d)
+
+instance (Monoid a, Monoid b, Monoid c) => Applicative (Four a b c) where
+  pure d = Four (mempty) (mempty) (mempty) d
+  (<*>) (Four a b c fd) (Four a' b' c' d) = Four (a <> a') (b <> b') (c <> c') (fd d)
 
 -- Tests
        
@@ -132,14 +140,31 @@ genThree' :: (Arbitrary a, Arbitrary b) => Gen (Three' a b )
 genThree' = do
   a <- arbitrary
   b <- arbitrary
-  -- b' <- arbitrary
-  return (Three' a b b)
+  b' <- arbitrary
+  return (Three' a b b')
 
 instance (Arbitrary a, Arbitrary b) => Arbitrary (Three' a b ) where
   arbitrary = genThree'
 
 instance (Eq a, Eq b) => EqProp (Three' a b) where
   (=-=) = eq 
+
+-- FOur
+genFour :: (Arbitrary a, Arbitrary b, Arbitrary c, Arbitrary d) => Gen (Four a b c d)
+genFour = do 
+  a <- arbitrary
+  b <- arbitrary
+  c <- arbitrary
+  d <- arbitrary
+  return (Four a b c d)
+
+instance (Arbitrary a, Arbitrary b, Arbitrary c, Arbitrary d) => Arbitrary (Four a b c d) where
+  arbitrary = genFour
+
+instance (Eq a, Eq b, Eq c, Eq d) => EqProp (Four a b c d) where
+  (=-=) = eq  
+  
+
 
 tests :: IO()
 tests = hspec $ do
@@ -152,6 +177,8 @@ tests = hspec $ do
       quickBatch (applicative (Three (Sum 1, Sum 2, Sum 3) (Product 1, Product 2, Product 3) ("A", "B", "C") :: Three (Sum Int, Sum Int, Sum Int) (Product Int, Product Int, Product Int) (String, String, String) )   )
     it "Three' applicative" $ do
       quickBatch (applicative (Three' (Sum 1, Sum 2, Sum 3) (Product 1, Product 2, Product 3) (Product 4, Product 5, Product 6)  :: Three' (Sum Int, Sum Int, Sum Int) (Product Int, Product Int, Product Int) )   )
+    it "Four applicative" $ do
+      quickBatch (applicative (Four (Sum 1, Sum 2, Sum 3) (Product 1, Product 2, Product 3) ("A", "B", "C") ([1], [2], [3]) :: Four (Sum Int, Sum Int, Sum Int) (Product Int, Product Int, Product Int) (String, String, String) ([Int], [Int], [Int]) )   )
     
     
       
