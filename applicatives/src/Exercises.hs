@@ -1,5 +1,6 @@
 module Exercises where
   
+import Data.Monoid
 import Test.Hspec  
 import Test.QuickCheck 
 import Test.QuickCheck.Checkers
@@ -32,6 +33,8 @@ arrowPure = pure
 arrowAp :: (a -> ( b -> c)) -> (a -> b) -> (a -> c)
 arrowAp = (<*>)
 
+-- Pair
+
 data Pair a = Pair a a deriving (Eq, Show)
 
 instance Functor Pair where
@@ -40,8 +43,22 @@ instance Functor Pair where
 instance Applicative Pair where
   pure a = Pair a a
   (<*>) (Pair f f') (Pair a a') =  Pair (f a) (f' a')
+
+-- Two
   
-  
+data Two a b = Two a b deriving (Eq, Show)  
+
+instance Functor (Two a) where 
+  fmap f (Two a b) = Two a (f b)
+
+instance (Monoid a) => Applicative (Two a) where
+  pure b = Two (mempty) b
+  (<*>) (Two a fb) (Two a' b) = Two (mappend a a') (fb b)  
+
+-- Pure call Product mempty(*1)
+twoEx =  pure ( * (Sum 10)) <*> Two (Product 10) (Sum 1)
+       
+-- Pair 
 genPair :: ( Arbitrary a) => Gen (Pair a) 
 genPair = do
   a' <- arbitrary
@@ -51,15 +68,30 @@ genPair = do
 instance (Arbitrary a) => Arbitrary (Pair a) where
   arbitrary = genPair
 
--- Checkers
-
-
 instance (Eq a) => EqProp (Pair a) 
   where (=-=) = eq  
+
+-- Two
+
+genTwo :: (Arbitrary a, Arbitrary b) => Gen (Two a b)
+genTwo = do 
+  a <- arbitrary
+  b <- arbitrary
+  return (Two a b)
+
+instance (Arbitrary a, Arbitrary b) => Arbitrary (Two a b) where
+  arbitrary = genTwo
+
+instance (Eq a, Eq b) => EqProp (Two a b)
+  where (=-=) = eq
+
 
 tests :: IO()
 tests = hspec $ do
   describe "Laws" $ do
     it "Pair applicative" $ do
       quickBatch (applicative (Pair ("C1", "C2", "C3") ("C4", "C5", "C6") :: Pair (String, String, String))   )
-        
+    it "Two applicative" $ do
+      quickBatch (applicative (Two (Sum 1, Sum 2, Sum 3) (Product 1, Product 2, Product 3 ) :: Two (Sum Int, Sum Int, Sum Int) (Product Int, Product Int, Product Int) )   )
+      
+          
