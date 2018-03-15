@@ -5,6 +5,7 @@ import Test.Hspec
 import Test.QuickCheck 
 import Test.QuickCheck.Checkers
 import Test.QuickCheck.Classes  
+import Control.Applicative (liftA3)
 
 lPure :: a -> [a]
 lPure = pure
@@ -192,7 +193,16 @@ instance (Eq a, Eq b) => EqProp (Four' a b) where
   (=-=) = eq
 
 
+-- Combinations
 
+stops :: String
+stops = "pbtdkg"
+
+vowels :: String
+vowels = "aeiou"
+
+combos :: [a] -> [b] -> [c] -> [(a, b, c)]
+combos = liftA3 (,,)
 
 tests :: IO()
 tests = hspec $ do
