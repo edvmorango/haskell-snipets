@@ -69,8 +69,22 @@ instance (Monoid a, Monoid b) => Applicative (Three a b) where
   pure c = Three (mempty) (mempty) c
   (<*>) (Three a b fc) (Three a' b' c) = Three (mappend a a') (mappend b b') (fc c)
        
+-- Three'
+
+data Three' a b  = Three' a b b deriving (Eq, Show)       
        
--- Pair 
+instance Functor (Three' a) where 
+  fmap f (Three' a b b') = Three' a (f b) (f b')       
+
+instance (Monoid a) => Applicative (Three' a) where
+  pure c = Three' (mempty) c c
+  (<*>) (Three' a fb fb') (Three' a' b b') = Three' (mappend a a') (fb b) (fb' b')
+       
+
+
+-- Tests
+       
+-- Pair  
 genPair :: ( Arbitrary a) => Gen (Pair a) 
 genPair = do
   a' <- arbitrary
@@ -112,6 +126,21 @@ instance (Arbitrary a, Arbitrary b, Arbitrary c) => Arbitrary (Three a b c) wher
 instance (Eq a, Eq b, Eq c) => EqProp (Three a b c) where
   (=-=) = eq 
 
+-- Three'
+
+genThree' :: (Arbitrary a, Arbitrary b) => Gen (Three' a b )
+genThree' = do
+  a <- arbitrary
+  b <- arbitrary
+  -- b' <- arbitrary
+  return (Three' a b b)
+
+instance (Arbitrary a, Arbitrary b) => Arbitrary (Three' a b ) where
+  arbitrary = genThree'
+
+instance (Eq a, Eq b) => EqProp (Three' a b) where
+  (=-=) = eq 
+
 tests :: IO()
 tests = hspec $ do
   describe "Laws" $ do
@@ -121,7 +150,8 @@ tests = hspec $ do
       quickBatch (applicative (Two (Sum 1, Sum 2, Sum 3) (Product 1, Product 2, Product 3)  :: Two (Sum Int, Sum Int, Sum Int) (Product Int, Product Int, Product Int) )   )
     it "Three applicative" $ do
       quickBatch (applicative (Three (Sum 1, Sum 2, Sum 3) (Product 1, Product 2, Product 3) ("A", "B", "C") :: Three (Sum Int, Sum Int, Sum Int) (Product Int, Product Int, Product Int) (String, String, String) )   )
-    
+    it "Three' applicative" $ do
+      quickBatch (applicative (Three' (Sum 1, Sum 2, Sum 3) (Product 1, Product 2, Product 3) (Product 4, Product 5, Product 6)  :: Three' (Sum Int, Sum Int, Sum Int) (Product Int, Product Int, Product Int) )   )
     
     
       
