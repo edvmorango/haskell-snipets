@@ -55,8 +55,20 @@ instance (Monoid a) => Applicative (Two a) where
   pure b = Two (mempty) b
   (<*>) (Two a fb) (Two a' b) = Two (mappend a a') (fb b)  
 
--- Pure call Product mempty(*1)
+--pure call Product mempty(*1)
 twoEx =  pure ( * (Sum 10)) <*> Two (Product 10) (Sum 1)
+
+-- Three 
+
+data Three a b c = Three a b c deriving (Eq, Show)       
+       
+instance Functor (Three a b) where 
+  fmap f (Three a b c) = Three a b (f c)       
+
+instance (Monoid a, Monoid b) => Applicative (Three a b) where
+  pure c = Three (mempty) (mempty) c
+  (<*>) (Three a b fc) (Three a' b' c) = Three (mappend a a') (mappend b b') (fc c)
+       
        
 -- Pair 
 genPair :: ( Arbitrary a) => Gen (Pair a) 
@@ -82,9 +94,23 @@ genTwo = do
 instance (Arbitrary a, Arbitrary b) => Arbitrary (Two a b) where
   arbitrary = genTwo
 
-instance (Eq a, Eq b) => EqProp (Two a b)
-  where (=-=) = eq
+instance (Eq a, Eq b) => EqProp (Two a b) where
+  (=-=) = eq
 
+-- Three
+
+genThree :: (Arbitrary a, Arbitrary b, Arbitrary c) => Gen (Three a b c)
+genThree = do
+  a <- arbitrary
+  b <- arbitrary
+  c <- arbitrary
+  return (Three a b c)
+
+instance (Arbitrary a, Arbitrary b, Arbitrary c) => Arbitrary (Three a b c) where
+  arbitrary = genThree
+
+instance (Eq a, Eq b, Eq c) => EqProp (Three a b c) where
+  (=-=) = eq 
 
 tests :: IO()
 tests = hspec $ do
@@ -92,6 +118,11 @@ tests = hspec $ do
     it "Pair applicative" $ do
       quickBatch (applicative (Pair ("C1", "C2", "C3") ("C4", "C5", "C6") :: Pair (String, String, String))   )
     it "Two applicative" $ do
-      quickBatch (applicative (Two (Sum 1, Sum 2, Sum 3) (Product 1, Product 2, Product 3 ) :: Two (Sum Int, Sum Int, Sum Int) (Product Int, Product Int, Product Int) )   )
+      quickBatch (applicative (Two (Sum 1, Sum 2, Sum 3) (Product 1, Product 2, Product 3)  :: Two (Sum Int, Sum Int, Sum Int) (Product Int, Product Int, Product Int) )   )
+    it "Three applicative" $ do
+      quickBatch (applicative (Three (Sum 1, Sum 2, Sum 3) (Product 1, Product 2, Product 3) ("A", "B", "C") :: Three (Sum Int, Sum Int, Sum Int) (Product Int, Product Int, Product Int) (String, String, String) )   )
+    
+    
+    
       
           
