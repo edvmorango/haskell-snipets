@@ -90,6 +90,16 @@ instance (Monoid a, Monoid b, Monoid c) => Applicative (Four a b c) where
   pure d = Four (mempty) (mempty) (mempty) d
   (<*>) (Four a b c fd) (Four a' b' c' d) = Four (a <> a') (b <> b') (c <> c') (fd d)
 
+-- Four
+data Four' a b  = Four' a a a b deriving (Eq, Show)
+
+instance Functor (Four' a) where
+  fmap f (Four' a a' a'' b) = Four' a a' a'' (f b)
+  
+instance (Monoid a) => Applicative (Four' a ) where
+  pure d = Four' (mempty) (mempty) (mempty) d
+  (<*>) (Four' a a' a'' fb) (Four' ar ar' ar'' b) = Four' (a <> ar) (a' <> ar') (a'' <> ar'') (fb b)
+
 -- Tests
        
 -- Pair  
@@ -163,7 +173,25 @@ instance (Arbitrary a, Arbitrary b, Arbitrary c, Arbitrary d) => Arbitrary (Four
 
 instance (Eq a, Eq b, Eq c, Eq d) => EqProp (Four a b c d) where
   (=-=) = eq  
-  
+
+-- Four'
+
+-- Gen is binded to Higher Kind Types
+genFour' :: (Arbitrary a, Arbitrary b) => Gen (Four' a b)
+genFour' = do
+  a <- arbitrary
+  a' <- arbitrary
+  a'' <- arbitrary
+  b <- arbitrary
+  return (Four' a a' a'' b)  
+
+instance (Arbitrary a, Arbitrary b) => Arbitrary (Four' a b) where
+  arbitrary = genFour'
+
+instance (Eq a, Eq b) => EqProp (Four' a b) where
+  (=-=) = eq
+
+
 
 
 tests :: IO()
@@ -179,7 +207,9 @@ tests = hspec $ do
       quickBatch (applicative (Three' (Sum 1, Sum 2, Sum 3) (Product 1, Product 2, Product 3) (Product 4, Product 5, Product 6)  :: Three' (Sum Int, Sum Int, Sum Int) (Product Int, Product Int, Product Int) )   )
     it "Four applicative" $ do
       quickBatch (applicative (Four (Sum 1, Sum 2, Sum 3) (Product 1, Product 2, Product 3) ("A", "B", "C") ([1], [2], [3]) :: Four (Sum Int, Sum Int, Sum Int) (Product Int, Product Int, Product Int) (String, String, String) ([Int], [Int], [Int]) )   )
-    
+    it "Four' applicative" $ do
+      quickBatch (applicative (Four' (Sum 1, Sum 2, Sum 3) (Sum 4, Sum 5, Sum 6) (Sum 7, Sum 8, Sum 9) (Product 1, Product 2, Product 3)  :: Four' (Sum Int, Sum Int, Sum Int) (Product Int, Product Int, Product Int) )   )
+      
     
       
           
