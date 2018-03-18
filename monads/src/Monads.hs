@@ -67,10 +67,18 @@ mkPerson n a s = do
   sal <- minimumSalary s
   return $ Person name age sal
 
--- mkPerson2 ::  String -> Int -> Double -> Maybe Person
--- mkPerson2 n a s = noEmpty n >>= \(name -> noNegative a) >>= (\age -> minimumSalary s) >>= \n
+mkPerson2 ::  String -> Int -> Double -> Maybe Person
+mkPerson2 n a s = noEmpty n >>= (\name ->  noNegative a >>= (\age ->   minimumSalary s >>= (\sal -> return (Person name age sal)) ))
   
   
+-- This computations are independents before pure?  
+-- mkPersonAPM :: String -> Int -> Double -> Maybe Person
+mkPersonAPM n a s = do 
+  name <- noEmpty n
+  age <- noNegative a
+  sal <- minimumSalary s
+  pure (name, age, sal)
+
 
 
 
