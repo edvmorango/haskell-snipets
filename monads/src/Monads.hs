@@ -1,13 +1,12 @@
 module Monads where
 
-import Control.Monad (join)
+import Control.Monad (join, (>=>))
 import Control.Applicative
 import Test.Hspec  
 import Test.QuickCheck.Arbitrary
 import Test.QuickCheck.Checkers 
 import Test.QuickCheck.Classes
 import Test.QuickCheck
-
 
 someFunc :: IO ()
 someFunc = putStrLn "someFunc"
@@ -159,6 +158,31 @@ instance (Arbitrary a, Arbitrary b) => Arbitrary (Sum a b) where
 
 instance (Eq a, Eq b) => EqProp (Sum a b) where
   (=-=) = eq
+
+
+-- Composition
+
+sayHi :: String -> IO String
+sayHi g = do
+  putStrLn g
+  getLine
+
+readM :: Read a => String -> IO a
+readM = return . read  
+
+getAge :: String -> IO Int
+getAge = sayHi >=> readM
+
+askForAge :: IO Int
+askForAge = getAge "How old are you?"
+
+askForAgeExplicit :: IO Int
+askForAgeExplicit =
+   sayHi "How old are you?" >>= readM :: IO Int 
+   --   g ∘ f
+   --      f             g
+   --  (a -> m a) -> (a -> m b)
+   --  (String -> IO String) -> (String -> IO Int)
 
 
 type CheckerSum =  Sum (String, String, String) (String, String, String)
