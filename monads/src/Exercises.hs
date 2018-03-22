@@ -126,7 +126,60 @@ instance (Arbitrary a) => Arbitrary (List a) where
 instance (Eq a) => EqProp (List a) where
   (=-=) = eq
 
--- Tests
+-- Monads 
+
+j :: Monad m => m (m a) -> m a
+j m =  m >>= id    
+-- j [[1],[2],[3]] >>= 
+-- id [1] <> id [2] <> id [3]
+-- [1,2,3]
+
+l1 :: Monad m => (a -> b) -> m a -> m b
+l1 f m =  m >>= (return . f)
+
+l2 :: Monad m => (a -> b -> c) -> m a -> m b -> m c
+l2 f m m' =  m >>= (\a -> m' >>=  (return . (f a))) 
+
+l2' :: Monad m => (a -> b -> c) -> m a -> m b -> m c
+l2' f m m' = do
+  a <- m
+  b <- m'
+  return (f a b)
+
+l2Ap :: Monad m => (a -> b -> c) -> m a -> m b -> m c
+l2Ap f m m' =  (return f) <*> m <*> m'
+
+a :: Monad m => m a -> m (a -> b) -> m b
+a m mf =  m >>= (\a -> mf >>= (\f ->  return (f a)))
+
+a' :: Monad m => m a -> m (a -> b) -> m b
+a' m mf =  do
+  a <- m
+  f <- mf
+  return $ f a
+
+aAp :: Monad m => m a -> m (a -> b) -> m b
+aAp m mf =  mf <*> m
+
+aApInterchange :: Monad m => m a -> m (a -> b) -> m b
+aApInterchange m mf = (m >>= (\a -> pure ($ a))) <*> mf
+
+meh :: Monad m => [a] -> (a -> m b) -> m [b]
+meh [] _ = return []  
+meh (h:t) f = do
+  b <- f h
+  bs <- meh t f
+  return $ b:bs  
+    
+-- meh :: Monad m => [a] -> (a -> mb) -> m [b]
+-- meh la f = sequence $ la >>= (\a -> return $ f a) 
+
+flipType :: (Monad m) => [m a] -> m [a]
+flipType l = meh l id
+-- [Just 1, Just 2, Just 3] 
+--  id (Just 1), id (Just 2) : id (Just 3)
+-- return (1 : 2 : 3)
+-- Just [1,2,3]
 
 type TestType = (String, Sum Int, Product Int)
 type TestType2 = (String, String, String)
