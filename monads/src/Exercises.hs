@@ -86,11 +86,45 @@ instance Monad Identity where
 instance (Arbitrary a) => Arbitrary (Identity a) where
   arbitrary = do
     a <- arbitrary
-    return a
+    return $ Identity a
 
 instance (Eq a) => EqProp (Identity a) where
   (=-=) = eq
 
+-- List
+
+data List a = Nil | Cons a (List a) deriving (Eq, Show)
+
+instance Monoid (List a) where
+  mempty = Nil
+  mappend Nil r = r
+  mappend (Cons a n) r = Cons a (n <> r)
+
+instance Functor (List) where
+  fmap _ Nil = Nil
+  fmap f (Cons a n) = Cons (f a) (fmap f n)
+
+instance Applicative (List) where
+  pure a = Cons a Nil 
+  (<*>) Nil _ = Nil
+  (<*>) _ Nil = Nil
+  (<*>) (Cons f n) l  = (fmap f l) <> (n <*> l) 
+
+instance Monad (List) where
+  return = pure 
+  (>>=) Nil _ = Nil
+  (>>=) (Cons a n) f =  (f a) <> ( n >>= f) 
+
+
+instance (Arbitrary a) => Arbitrary (List a) where
+  arbitrary = do 
+    a <- arbitrary 
+    a' <- arbitrary
+    a'' <- arbitrary
+    elements [ Cons a (Cons a' Nil),  Cons a (Cons a' (Cons a'' Nil )), Nil]
+
+instance (Eq a) => EqProp (List a) where
+  (=-=) = eq
 
 -- Tests
 
@@ -125,8 +159,15 @@ tests = hspec $ do
         quickBatch $ applicative (Identity ("Hey", Sum 10, Product 2) :: Identity TestType)   
       it "Monad" $do  
         quickBatch $ monad (Identity ("Hey", Sum 10, Product 2) :: Identity TestType)   
-    -- 
-    -- 
-        
+    describe "List" $ do
+      it "Monoid" $ do
+        quickBatch $ monoid (Cons ("Hey", Sum 10, Product 2) Nil :: List TestType)
+      it "Functor" $ do
+        quickBatch $ functor (Cons ("Hey", Sum 10, Product 2) Nil :: List TestType)   
+      it "Applicative" $ do
+        quickBatch $ applicative (Cons ("Hey", Sum 10, Product 2) Nil :: List TestType)   
+      it "Monad" $do  
+        quickBatch $ monad (Cons ("Hey", Sum 10, Product 2) Nil :: List TestType)   
+  
         
         
