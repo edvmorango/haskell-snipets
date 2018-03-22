@@ -50,6 +50,7 @@ instance Applicative (CEither a) where
   pure b = CRight b
   (<*>) (CRight f) (CRight b) = CRight (f b)
   (<*>) _ (CLeft a) = CLeft a
+  (<*>) (CLeft a) _  = CLeft a
 
 instance Monad (CEither a) where
   return = pure
@@ -65,6 +66,29 @@ instance (Arbitrary a, Arbitrary b) => Arbitrary (CEither a b) where
     
     
 instance (Eq a, Eq b) => EqProp (CEither a b) where
+  (=-=) = eq
+
+--
+
+newtype Identity a = Identity a deriving (Eq, Show, Ord)
+
+instance Functor Identity where
+  fmap f (Identity a) = Identity (f a)
+
+instance Applicative Identity  where
+  pure a = Identity a
+  (<*>) (Identity f) (Identity a) = pure (f a)
+
+instance Monad Identity where
+  return = pure
+  (>>=) (Identity a) f = f a
+
+instance (Arbitrary a) => Arbitrary (Identity a) where
+  arbitrary = do
+    a <- arbitrary
+    return a
+
+instance (Eq a) => EqProp (Identity a) where
   (=-=) = eq
 
 
@@ -94,8 +118,15 @@ tests = hspec $ do
         quickBatch $ applicative (CRight ("Hey", Sum 10, Product 2) :: CEither TestType2 TestType)   
       it "Monad" $do  
         quickBatch $ monad (CRight ("Hey", Sum 10, Product 2) :: CEither TestType2 TestType)   
-    
-        
+    describe "Identity" $ do
+      it "Functor" $ do
+        quickBatch $ functor (Identity ("Hey", Sum 10, Product 2) :: Identity TestType)   
+      it "Applicative" $ do
+        quickBatch $ applicative (Identity ("Hey", Sum 10, Product 2) :: Identity TestType)   
+      it "Monad" $do  
+        quickBatch $ monad (Identity ("Hey", Sum 10, Product 2) :: Identity TestType)   
+    -- 
+    -- 
         
         
         
