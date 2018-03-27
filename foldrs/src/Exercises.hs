@@ -12,7 +12,11 @@ genT :: (Arbitrary a, Eq a, Ord a, Monoid a) => Gen a
 genT = do
   a <- arbitrary
   return a
-    
+
+genTAx = genT :: Gen (Product Int)
+  
+--------------------------------------------------------------------------------
+  
 data Constant a b = Constant b deriving (Eq, Show)
 
 instance (Monoid b) => Monoid (Constant a b) where
@@ -66,6 +70,7 @@ genTwos :: (Arbitrary a, Arbitrary b, Monoid a, Monoid b)
             => Gen a 
             -> Gen b 
             -> Gen ([(Two a b)], [(a,b)])
+
 genTwos ga gb = do 
   la <- listOf ga
   lb <- listOf gb
@@ -73,23 +78,54 @@ genTwos ga gb = do
     return $ ( fmap (\(a,b) -> Two a b) l, l)
 
 
-
-genTAx = genT :: Gen (Product Int)
-
-
 genTwoAx = 
   (genTwos  genTAx genTAx) :: (Gen ([Two (Product Int) (Product Int)], [((Product Int), (Product Int))]))
 
   
 --------------------------------------------------------------------------------
---------------------------------------------------------------------------------
---------------------------------------------------------------------------------
---------------------------------------------------------------------------------
-
-
-
 
 data Three a b c = Three b c deriving (Eq, Show)
+
+instance (Monoid b, Monoid c) => Monoid (Three a b c) where
+  mempty = Three (mempty) (mempty)
+  mappend (Three b c) (Three b' c') = Three (b `mappend` b') (c `mappend` c')
+
+instance Foldable (Three a b) where
+  foldr f acc (Three _ c) = f c acc
+  foldl f acc (Three _ c) = f acc c
+  foldMap f (Three _ c) = f c
+  
+  
+instance (Arbitrary b, Arbitrary c, Monoid b, Monoid c) => Arbitrary (Three a b c) where
+  arbitrary = do
+    b <- arbitrary
+    c <- arbitrary
+    return $ Three b c
+    
+instance (Eq b, Eq c) => EqProp (Three a b c) where
+  (=-=) = eq
+
+genThrees :: (Arbitrary b, Arbitrary c, Monoid b, Monoid c) 
+            => Gen b
+            -> Gen c 
+            -> Gen ([(Three a b c)], [(b,c)])    
+genThrees gb gc = do 
+  la <- listOf gb
+  lc <- listOf gc
+  let l = zip la lc in
+    return $ ( fmap (\(b, c) -> Three b c) l, l)
+
+
+genThreeAx = 
+  (genThrees genTAx genTAx) :: (Gen ([Three Int (Product Int) (Product Int)], [((Product Int), (Product Int))]))
+
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+
+
+
+
 
 data Three' a b = Three' a b b deriving (Eq, Show)
 
@@ -113,9 +149,14 @@ tests = hspec $ do
         quickBatch $ monoid ( Two ("a", "b", "c") ("Hey", Sum 20, Product 10 ) :: Two LeftMonoid TestType  )
       it "foldr == foldMap" $ do 
         forAll ( genTwoAx) 
-                (\(w, u) -> foldr (\a ac -> mappend a ac) (Two (Product 1) (Product 1) ) w == foldMap (\(a,b) -> Two a b) u   ) 
-                
-                
+                (\(w, u) -> foldr (\a ac -> mappend a ac) (Two (Product 1) (Product 1) ) w == foldMap (\(a,b) -> Two a b) u   )               
+  describe "Three " $ do
+      it "Three monoid" $ do
+        quickBatch $ monoid ( Three ("a", "b", "c") ("Hey", Sum 20, Product 10 ) :: Three Int LeftMonoid TestType  )
+      it "foldr == foldMap" $ do 
+        forAll ( genThreeAx) 
+                (\(w, u) -> foldr (\a ac -> mappend a ac) (Three (Product 1) (Product 1) ) w == foldMap (\(a,b) -> Three a b) u   ) 
+            
                 
                 
                 
