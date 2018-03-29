@@ -120,14 +120,42 @@ genThreeAx =
   (genThrees genTAx genTAx) :: (Gen ([Three Int (Product Int) (Product Int)], [((Product Int), (Product Int))]))
 
 --------------------------------------------------------------------------------
---------------------------------------------------------------------------------
---------------------------------------------------------------------------------
-
-
-
-
 
 data Three' a b = Three' a b b deriving (Eq, Show)
+
+instance (Monoid a, Monoid b) => Monoid (Three' a b) where
+  mempty = Three' (mempty) (mempty) (mempty)
+  mappend (Three' a b bb) (Three' a' b' bb') = Three' (mappend a a') (mappend b b') (mappend bb bb')
+
+instance Foldable (Three' a) where 
+  foldMap f (Three' _ b b') = (f b) <> (f b') 
+
+instance (Arbitrary a, Arbitrary b, Monoid a, Monoid b) => Arbitrary (Three' a b) where
+  arbitrary = do
+    a <- arbitrary
+    b <- arbitrary
+    bb <- arbitrary
+    return $ Three' a b bb
+      
+instance (Eq a, Eq b) => EqProp (Three' a b) where
+  (=-=) = eq
+
+genThrees' :: (Arbitrary a, Arbitrary b, Monoid a, Monoid b) 
+            => Gen a
+            -> Gen  b
+            -> Gen ([(Three' a b)], [(b,b)])    
+genThrees' ga gb = do
+  lb <- listOf gb
+  lb' <- listOf gb
+  let l = zip lb lb' in
+    return $ ( fmap (\(b,b') -> Three' (mempty) b b') l, l)            
+
+genThreeAx' = (genThrees' genTAx genTAx) :: (Gen ([Three' (Product Int) (Product Int)], [((Product Int), (Product Int))]))
+
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+
+
 
 data Four a b = Four a b b b  deriving (Eq, Show)
 
@@ -156,7 +184,12 @@ tests = hspec $ do
       it "foldr == foldMap" $ do 
         forAll ( genThreeAx) 
                 (\(w, u) -> foldr (\a ac -> mappend a ac) (Three (Product 1) (Product 1) ) w == foldMap (\(a,b) -> Three a b) u   ) 
-            
-                
-                
+  describe "Three' " $ do
+      it "Three' monoid" $ do
+        quickBatch $ monoid ( Three' ("a", "b", "c") ("Hey", Sum 20, Product 10 ) ("Hey", Sum 20, Product 10 ) :: Three' LeftMonoid  TestType  )
+      it "foldr == foldMap" $ do 
+        forAll ( genThreeAx') 
+                (\(w, u) -> foldr (\a ac -> mappend a ac) (Three' (Product 1) (Product 1) (Product 1) ) w == foldMap (\(a,b) -> Three' (Product 1) a b) u) 
+
+
                 
