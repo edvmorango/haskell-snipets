@@ -190,7 +190,17 @@ genFourAx = (genFours genTAx genTAx ) :: (Gen ([Four (Product Int) (Product Int)
 
 --------------------------------------------------------------------------------
 
+filterF :: (Applicative f, Foldable t, Monoid (f a)) 
+          => (a -> Bool) 
+          -> t a 
+          -> f a
+filterF f t =  foldMap (\a -> if (f a) then (pure a) else (mempty)) t
 
+
+
+
+
+--------------------------------------------------------------------------------
 
 
 type PhantomType = ( () , () ,())
