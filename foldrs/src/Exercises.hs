@@ -153,11 +153,44 @@ genThrees' ga gb = do
 genThreeAx' = (genThrees' genTAx genTAx) :: (Gen ([Three' (Product Int) (Product Int)], [((Product Int), (Product Int))]))
 
 --------------------------------------------------------------------------------
+
+data Four a b = Four a b b b  deriving (Eq, Show)
+
+instance (Monoid a, Monoid b) => Monoid (Four a b) where
+  mempty = Four mempty mempty mempty mempty
+  mappend (Four a b c d) (Four a' b' c' d') = 
+    Four (a `mappend` a')  (b `mappend` b')  (c `mappend` c')  (d `mappend` d')
+
+instance Foldable (Four a) where
+  foldMap f (Four _ b c d) =  (f b) <> (f c) <> (f d)
+ 
+instance (Arbitrary a, Arbitrary b, Monoid a, Monoid b) => Arbitrary (Four a b) where
+  arbitrary = do
+    a <- arbitrary
+    b <- arbitrary
+    c <- arbitrary
+    d <- arbitrary
+    return $ Four a b c d
+
+instance (Eq a, Eq b) => EqProp (Four a b) where
+  (=-=) = eq
+
+genFours :: (Arbitrary a, Arbitrary b, Monoid a, Monoid b)
+          => Gen a
+          -> Gen b
+          -> Gen ([(Four a b)], [(a,b)])
+genFours ga gb = do
+  la <- listOf ga
+  lb <- listOf gb
+  let l = zip la lb in
+    return $ (fmap (\(a, b) -> Four a b b b) l , l )
+  
+  
+genFourAx = (genFours genTAx genTAx ) :: (Gen ([Four (Product Int) (Product Int)],  [( (Product Int), (Product Int))] ))
+
 --------------------------------------------------------------------------------
 
 
-
-data Four a b = Four a b b b  deriving (Eq, Show)
 
 
 type PhantomType = ( () , () ,())
@@ -190,6 +223,11 @@ tests = hspec $ do
       it "foldr == foldMap" $ do 
         forAll ( genThreeAx') 
                 (\(w, u) -> foldr (\a ac -> mappend a ac) (Three' (Product 1) (Product 1) (Product 1) ) w == foldMap (\(a,b) -> Three' (Product 1) a b) u) 
-
+  describe "Four' " $ do
+      it "Four monoid" $ do
+        quickBatch $ monoid ( Four ("a", "b", "c") ("Hey", Sum 20, Product 10 ) ("Hey", Sum 20, Product 10 ) ("Hey", Sum 20, Product 10 ) :: Four LeftMonoid  TestType  )
+      it "foldr == foldMap" $ do 
+        forAll ( genFourAx) 
+                (\(w, u) -> foldr (\a ac -> mappend a ac) (Four (Product 1) (Product 1) (Product 1) (Product 1) ) w == foldMap (\(a,b) -> Four a b b b) u) 
 
                 
