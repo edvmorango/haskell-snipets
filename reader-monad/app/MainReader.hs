@@ -2,6 +2,7 @@
 
 module Main where
 
+import Control.Monad (join)
 import Data.Char
 import Lib
 
@@ -36,6 +37,11 @@ instance Applicative (Reader r) where
   pure a = Reader (\fix -> a)
   (<*>) :: Reader r (a -> b) -> Reader r a -> Reader r b
   (<*>) (Reader f) (Reader a) = (Reader (\input -> (f input) (a input)))
+
+instance Monad (Reader r) where
+  return = pure
+  (>>=) :: Reader r a -> (a -> Reader r b) -> Reader r b
+  (>>=) (Reader v) f = join $ Reader (\r -> f (v r))
 
 ask :: Reader a a
 ask = Reader id
@@ -81,11 +87,7 @@ myLiftA2 f a b = f <$> a <*> b
 -- (Name -> (Address -> Dog)) -> (Person -> Name) -> (Person -> (Address -> Dog)) 
 a = Dog <$> dogName
 
-b = a pers
-
 -- f (a -> b) -> f a -> f b
 -- ((-> Person) (Address -> Dog)) -> (-> Person) Address) -> ((-> Person) Dog)
 -- (Person -> (Address -> Dog) ->  (Person -> Address) -> (Person -> Dog)
 aa = Dog <$> dogName <*> address
-
-bb = aa pers
