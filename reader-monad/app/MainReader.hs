@@ -1,3 +1,5 @@
+{-# LANGUAGE InstanceSigs #-}
+
 module Main where
 
 import Data.Char
@@ -25,9 +27,16 @@ newtype Reader r a = Reader
   { runReader :: r -> a
   }
 
--- instance Functor (Reader r) where
---  fmap :: (a -> b) -> Reader r a -> Reader r b
---  fmap f (Reader ra) = Reader $ (f . ra) -- or Reader $ (f . ra)
+instance Functor (Reader r) where
+  fmap :: (a -> b) -> Reader r a -> Reader r b
+  fmap f (Reader ra) = Reader $ (f . ra) -- or Reader $ (f . ra)
+
+instance Applicative (Reader r) where
+  pure :: a -> Reader r a
+  pure a = Reader (\fix -> a)
+  (<*>) :: Reader r (a -> b) -> Reader r a -> Reader r b
+  (<*>) (Reader f) (Reader a) = (Reader (\input -> (f input) (a input)))
+
 ask :: Reader a a
 ask = Reader id
 
@@ -66,3 +75,17 @@ getDogR = Dog <$> dogName <*> address
 
 myLiftA2 :: Applicative f => (a -> b -> c) -> f a -> f b -> f c
 myLiftA2 f a b = f <$> a <*> b
+
+-- (a -> b) -> f a -> f b
+-- (Name -> (Address -> Dog)) -> (-> Person) Name -> (-> Person) (Address -> Dog)
+-- (Name -> (Address -> Dog)) -> (Person -> Name) -> (Person -> (Address -> Dog)) 
+a = Dog <$> dogName
+
+b = a pers
+
+-- f (a -> b) -> f a -> f b
+-- ((-> Person) (Address -> Dog)) -> (-> Person) Address) -> ((-> Person) Dog)
+-- (Person -> (Address -> Dog) ->  (Person -> Address) -> (Person -> Dog)
+aa = Dog <$> dogName <*> address
+
+bb = aa pers
