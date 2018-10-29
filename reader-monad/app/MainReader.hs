@@ -24,10 +24,20 @@ fmapped f = (rev <$> cap) f
 tupled :: [Char] -> ([Char], [Char])
 tupled cs = ((,) <$> cap <*> rev) cs
 
+-- Reader Int String
+-- Reader :: * -> * -> * ->
+-- someReader :: Reader Int String
+-- someReader = Reader $ (\aInt -> (show aInt))
 newtype Reader r a = Reader
   { runReader :: r -> a
   }
 
+--  (String -> Char) <$> Reader Int String
+--  someReader  = Reader $ (\aInt -> (show aInt)) :: Reader Int String
+--  f = (\str -> head str) :: String -> Char 
+--  f . ra  =  (\str -> head str) . (\aInt -> show (a -> Int)) :: (String -> Char) . (Int -> String)
+--  (.) :: (b -> c) -> (a -> b) -> (a -> c) 
+--  f . ra  ::  (Int -> Char)
 instance Functor (Reader r) where
   fmap :: (a -> b) -> Reader r a -> Reader r b
   fmap f (Reader ra) = Reader $ (f . ra) -- or Reader $ (f . ra)
